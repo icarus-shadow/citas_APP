@@ -9,7 +9,7 @@ import {
     SafeAreaView,
 } from 'react-native';
 
-const RegisterScreen = () => {
+const RegisterScreen = ({navigation}) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [nombres, setNombres] = useState('');
@@ -105,6 +105,9 @@ const RegisterScreen = () => {
 
                 <TouchableOpacity style={styles.button} onPress={handleRegister}>
                     <Text style={styles.buttonText}>Registrarse</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('login')}>
+                    <Text  style={styles.buttonText}>Login</Text>
                 </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>

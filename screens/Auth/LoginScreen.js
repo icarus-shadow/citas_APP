@@ -8,7 +8,7 @@ import {
     SafeAreaView,
 } from 'react-native';
 
-const LoginScreen = () => {
+const LoginScreen = ({navigation}) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -42,6 +42,9 @@ const LoginScreen = () => {
                 >
                     <Text style={styles.buttonText}>Login</Text>
                 </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('register')}>
+                    <Text style={styles.buttonText}>Registrarse</Text>
+                </TouchableOpacity>
             </View>
         </SafeAreaView>
     );
@@ -73,10 +76,10 @@ const styles = StyleSheet.create({
     },
     button: {
         backgroundColor: '#007AFF',
-        height: 50,
-        borderRadius: 8,
-        justifyContent: 'center',
+        padding: 15,
+        borderRadius: 5,
         alignItems: 'center',
+        marginTop: 10,
     },
     buttonText: {
         color: '#fff',
