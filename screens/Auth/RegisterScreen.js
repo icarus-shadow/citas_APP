@@ -23,6 +23,7 @@ const RegisterScreen = ({navigation}) => {
     const [alergias, setAlergias] = useState('');
 
     const handleRegister = () => {
+        console.log('Register pressed:', email, password);
         // TODO: Implementar lógica de registro
     };
 
