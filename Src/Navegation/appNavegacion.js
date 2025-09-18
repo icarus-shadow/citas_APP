@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {useState,useEffect,useRef, use} from "react";
 import {AppState} from "react-native";
 import PrincipalNav from "./PrincipalNav";
+import PacientesStack from "./BottomStack/PacientesStack";
 
 
 export default function AppNavegacion() {
@@ -49,7 +50,7 @@ export default function AppNavegacion() {
     },[]);
     return (
         <NavigationContainer>
-            {userToken ? <PrincipalNav /> : <AuthNav/>}
+            <PacientesStack />
         </NavigationContainer>
     );
 }

@@ -1,9 +1,10 @@
+import {Text} from "react-native";
 
 
 export default function CitasMain() {
     return (
         <>
-            Citas
+            <Text>citas in page</Text>
         </>
     )
 }

@@ -1,9 +1,9 @@
-
+import {Text} from "react-native";
 
 export default function DoctoresMain() {
     return (
         <>
-            doctores
+            <Text>doctores in page</Text>
         </>
     )
 }

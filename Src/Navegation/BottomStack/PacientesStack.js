@@ -1,34 +1,34 @@
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import CitasMain from "../../../screens/Pages/pacientes/bottomTab/citas/citasM";
 import DoctoresMain from "../../../screens/Pages/pacientes/bottomTab/doctores/doctoresM";
 import InicioMain from "../../../screens/Pages/pacientes/bottomTab/inicio/inicioM";
 import SoporteMain from "../../../screens/Pages/pacientes/bottomTab/soporte/soporteM";
+import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
 
 
-const Stack = createNativeStackNavigator();
-export default function PacientesStack() {
+const Tab = createBottomTabNavigator();
+export default function PacientesBTab() {
     return (
-        <Stack.Navigator>
-            <Stack.Screen
+        <Tab.Navigator>
+            <Tab.Screen
                 name="citas"
                 component={CitasMain}
-                options={{title: "prestamos"}}
+                options={{title: "citas"}}
             />
-            <Stack.Screen
+            <Tab.Screen
                 name="doctores"
                 component={DoctoresMain}
                 options={{title: "doctores"}}
             />
-            <Stack.Screen
+            <Tab.Screen
                 name="inicio"
                 component={InicioMain}
                 options={{title: "inicio"}}
             />
-            <Stack.Screen
+            <Tab.Screen
                 name="soporte"
                 component={SoporteMain}
                 options={{title: "soporte"}}
             />
-        </Stack.Navigator>
+        </Tab.Navigator>
     )
 }

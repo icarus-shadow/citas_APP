@@ -1,9 +1,9 @@
-
+import {Text} from "react-native";
 
 export default function SoporteMain() {
     return (
         <>
-            Soporte
+            <Text>soporte in page </Text>
         </>
     )
 }

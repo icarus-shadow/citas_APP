@@ -1,9 +1,9 @@
-
+import {Text} from "react-native";
 
 export default function InicioMain() {
     return (
         <>
-            inicio
+            <Text>inicio in page</Text>
         </>
     )
 }
