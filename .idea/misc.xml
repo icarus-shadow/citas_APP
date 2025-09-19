@@ -4,6 +4,10 @@
     <execution />
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="FrameworkDetectionExcludesConfiguration">
+    <file type="web" url="file://$PROJECT_DIR$/node_modules/expo-modules-autolinking/android/expo-gradle-plugin" />
+    <file type="web" url="file://$PROJECT_DIR$/node_modules/expo-modules-core/expo-module-gradle-plugin" />
+  </component>
   <component name="ProjectRootManager">
     <output url="file://$PROJECT_DIR$/out" />
   </component>

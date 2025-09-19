@@ -3,6 +3,7 @@ import DoctoresMain from "../../../screens/Pages/pacientes/bottomTab/doctores/do
 import InicioMain from "../../../screens/Pages/pacientes/bottomTab/inicio/inicioM";
 import SoporteMain from "../../../screens/Pages/pacientes/bottomTab/soporte/soporteM";
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
+import "./css/pacinetesPrueva.css"
 
 
 const Tab = createBottomTabNavigator();
