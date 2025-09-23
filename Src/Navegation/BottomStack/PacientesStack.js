@@ -1,35 +1,63 @@
+import React from "react";
+import {View} from "react-native";
+import BottomTab from "../../../components/BottomTab";
+import {createNativeStackNavigator} from "@react-navigation/native-stack";
 import CitasMain from "../../../screens/Pages/pacientes/bottomTab/citas/citasM";
 import DoctoresMain from "../../../screens/Pages/pacientes/bottomTab/doctores/doctoresM";
 import InicioMain from "../../../screens/Pages/pacientes/bottomTab/inicio/inicioM";
 import SoporteMain from "../../../screens/Pages/pacientes/bottomTab/soporte/soporteM";
-import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
-import "./css/pacinetesPrueva.css"
+import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
+import {colors, darkColors} from "../../../assets/colors";
+import {useSelector} from "react-redux";
+
+const Stack = createNativeStackNavigator();
+let col = colors;
 
 
-const Tab = createBottomTabNavigator();
-export default function PacientesBTab() {
+export default function PacientesStack() {
+    const isDark = useSelector((state) => state.boolean.value);
+    isDark ? col = colors : col = darkColors;
+
+    const tabs = [
+        {
+            key: "Inicio",
+            icon: "home",
+            label: "Inicio",
+            route: "Inicio"
+        },
+        {
+            key: "citas",
+            icon: "calendar",
+            label: "citas",
+            route: "Citas"
+        },
+        {
+            key: "doctores",
+            icon: "pulse",
+            label: "doctores",
+            route: "Doctores"
+        },
+        {
+            key: "Soporte",
+            icon: "call",
+            label: "Soporte",
+            route: "Soporte"
+        },
+    ];
+
     return (
-        <Tab.Navigator>
-            <Tab.Screen
-                name="citas"
-                component={CitasMain}
-                options={{title: "citas"}}
-            />
-            <Tab.Screen
-                name="doctores"
-                component={DoctoresMain}
-                options={{title: "doctores"}}
-            />
-            <Tab.Screen
-                name="inicio"
-                component={InicioMain}
-                options={{title: "inicio"}}
-            />
-            <Tab.Screen
-                name="soporte"
-                component={SoporteMain}
-                options={{title: "soporte"}}
-            />
-        </Tab.Navigator>
-    )
+        <SafeAreaProvider>
+            <SafeAreaView style={{flex: 1, backgroundColor: col.primaryResalt}}>
+                <View style={{flex: 1, backgroundColor: col.background}}>
+                    <Stack.Navigator id="stackPaciente" screenOptions={{headerShown: false}}>
+                        <Stack.Screen name="Inicio" component={InicioMain}/>
+                        <Stack.Screen name="Citas" component={CitasMain}/>
+                        <Stack.Screen name="Doctores" component={DoctoresMain}/>
+                        <Stack.Screen name="Soporte" component={SoporteMain}/>
+                    </Stack.Navigator>
+                    <BottomTab tabs={tabs} initialTab="Inicio"/>
+                </View>
+            </SafeAreaView>
+        </SafeAreaProvider>
+    );
 }
