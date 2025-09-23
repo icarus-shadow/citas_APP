@@ -38,8 +38,8 @@ const BottomTab = ({ tabs, initialTab }) => {
             >
                 <Path
                     d={`M0 30 Q ${width / 2} -30 ${width} 30 L ${width} 90 L 0 90 Z`}
-                    fill={col.primary}
-                    stroke={col.primary}
+                    fill={col.secondary}
+                    stroke={col.secondary}
                 />
             </Svg>
 
@@ -52,8 +52,8 @@ const BottomTab = ({ tabs, initialTab }) => {
             >
                 <Path
                     d={`M0 20 Q ${width / 2} -20 ${width} 20 L ${width} 90 L 0 90 Z`}
-                    fill={col.primaryResalt}
-                    stroke={col.primaryResalt}
+                    fill={col.secondaryResalt}
+                    stroke={col.secondaryResalt}
                 />
             </Svg>
 
@@ -74,7 +74,7 @@ const BottomTab = ({ tabs, initialTab }) => {
                             <Ionicons
                                 name={tab.icon}
                                 size={32}
-                                color={isActive ? col.accent : col.accentResalt}
+                                color={isActive ? col.primaryResalt : col.primary}
                                 style={isActive ? styles.activeIcon : styles.inactiveIcon}
                             />
                         </TouchableOpacity>
@@ -146,8 +146,8 @@ const dynamicStyles = {
         width: "60%",
         height: 5,
         borderRadius: 6,
-        backgroundColor: col.accent,
-        shadowColor: col.accent,
+        backgroundColor: col.primaryResalt,
+        shadowColor: col.primaryResalt,
         shadowOpacity: 0.8,
         shadowRadius: 10,
         elevation: 10,
