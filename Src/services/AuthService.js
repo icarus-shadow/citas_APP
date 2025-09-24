@@ -3,7 +3,7 @@ import api from './Conexion'
 
 export const LoginUser = async (email, password) => {
     try {
-        const response = await  api.post('/login', {email, password});
+        const response = await  api.post('api/login', {email, password});
         const  token = response.data.token
         console.log("Respuesta del servidor", response.data);
         console.log("token recibido", token);

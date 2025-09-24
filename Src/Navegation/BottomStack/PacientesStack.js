@@ -47,7 +47,7 @@ export default function PacientesStack() {
 
     return (
         <SafeAreaProvider>
-            <SafeAreaView style={{flex: 1, backgroundColor: col.primaryResalt}}>
+            <SafeAreaView style={{flex: 1, backgroundColor: col.secondaryResalt}}>
                 <View style={{flex: 1, backgroundColor: col.background}}>
                     <Stack.Navigator id="stackPaciente" screenOptions={{headerShown: false}}>
                         <Stack.Screen name="Inicio" component={InicioMain}/>

@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {useState,useEffect,useRef, use} from "react";
 import {AppState} from "react-native";
 import PacientesStack from "./BottomStack/PacientesStack";
+import AuthNav from "./authNav";
 
 
 export default function AppNavegacion() {
@@ -48,7 +49,7 @@ export default function AppNavegacion() {
     },[]);
     return (
         <NavigationContainer>
-            <PacientesStack />
+            {userToken ? <PacientesStack /> : <AuthNav/>}
         </NavigationContainer>
     );
 }

@@ -7,7 +7,7 @@ import {
     TouchableOpacity,
     SafeAreaView, Alert,
 } from 'react-native';
-import { loginUser } from "../../Src/services/AuthService"
+import { LoginUser } from "../../Src/services/AuthService"
 
 const LoginScreen = ({navigation}) => {
     const [email, setEmail] = useState('');
@@ -17,7 +17,7 @@ const LoginScreen = ({navigation}) => {
     const handleLogin = async () => {
         setLoading(true);
         try {
-            const  result = await loginUser(email, password);
+            const  result = await LoginUser(email, password);
             if (result.success) {
                 Alert.alert("Exito", "Inicio de sesion exitoso", [
                     {Text: "ok", onPress: () => console.log("logeo exitoso, redirigiendo")}
@@ -57,7 +57,7 @@ const LoginScreen = ({navigation}) => {
                 <TouchableOpacity
                     style={styles.button}
                     onPress={handleLogin}
-                    disabled={!loading}
+                    disabled={loading}
                 >
                     <Text style={styles.buttonText}>Login</Text>
                 </TouchableOpacity>
