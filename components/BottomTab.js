@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Text, StyleSheet, Dimensions } from "react-nati
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import Svg, { Path } from "react-native-svg";
-import { colors, darkColors } from "../assets/colors";
+import { colors, darkColors } from "../utils/desing/Colors";
 import {useSelector} from "react-redux";
 
 const { width } = Dimensions.get("window");
@@ -13,7 +13,7 @@ let col = colors;
 
 
 const BottomTab = ({ tabs, initialTab }) => {
-    const isDark = useSelector((state) => state.boolean.value);
+    const isDark = useSelector((state) => state.darkMode.value);
     const navigation = useNavigation();
     const [activeTab, setActiveTab] = useState(initialTab || tabs[0]?.key);
 

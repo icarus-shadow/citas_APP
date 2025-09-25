@@ -1,26 +1,51 @@
-import {StatusBar} from 'expo-status-bar';
-import {Button, StyleSheet, Text, View} from 'react-native';
-import AppNavegacion from "./Src/Navegation/appNavegacion";
-import {Provider} from "react-redux";
-import {store} from "./store/store";
+import React, { useEffect } from 'react';
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import { store } from './utils/store/Store';
+import { StatusBar } from 'expo-status-bar';
+import { View, Text, ActivityIndicator } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import { checkAuthState } from './utils/slices/AuthSlice';
+import AppNavegacion from './Src/navegation/AppNavegacion';
 import SwitchDark from "./components/SwitchDark";
+import {colors, darkColors} from "./utils/desing/Colors";
+
+
+const Main = () => {
+
+    let col = colors;
+    const isDark = useSelector((state) => state.darkMode.value);
+    isDark ? col = colors : col = darkColors;
+
+    const dispatch = useDispatch();
+    const { isLoading } = useSelector((state) => state.auth);
+
+    useEffect(() => {
+        dispatch(checkAuthState());
+    }, [dispatch]);
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: col.background, }}>
+                <ActivityIndicator size="large" color={col.accent} />
+                <Text style={{color: col.text,}} >Cargando...</Text>
+            </View>
+        );
+    }
+
+    return(
+    <>
+        <StatusBar style="auto" />
+        <SwitchDark />
+        <AppNavegacion />
+    </>
+    );
+};
 
 export default function App() {
     return (
         <Provider store={store}>
-            <StatusBar style="auto"/>
-            <SwitchDark />
-            <AppNavegacion />
+            <StatusBar style="auto" />
+            <Main />
         </Provider>
-    )
+    );
 }
-
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-});
