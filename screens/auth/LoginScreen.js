@@ -65,6 +65,7 @@ const LoginScreen = ({ navigation }) => {
                 <TextInput
                     style={dynamicStyles.input(col)}
                     placeholder="Email"
+                    placeholderTextColor={col.text}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     value={email}
@@ -74,6 +75,7 @@ const LoginScreen = ({ navigation }) => {
                 <TextInput
                     style={dynamicStyles.input(col)}
                     placeholder="Password"
+                    placeholderTextColor={col.text}
                     secureTextEntry
                     value={password}
                     onChangeText={setPassword}
@@ -134,9 +136,11 @@ const dynamicStyles = {
         height: 50,
         borderWidth: 1,
         borderColor: col.primary,
+        color: col.text,
         borderRadius: 8,
         paddingHorizontal: 15,
         marginBottom: 15,
+        paddingLeft: 15,
     }),
 
     errorText: (col) => ({

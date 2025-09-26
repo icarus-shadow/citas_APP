@@ -21,7 +21,9 @@ const Card = ({title, subtitle, icons}) => {
 
             <View style={styles.iconsContainer}>
                 {icons.map((icon, index) => (
-                    <TouchableOpacity key={index} style={dynamicStyles.btn(col)}>
+                    <TouchableOpacity key={index} style={dynamicStyles.btn(col)}
+                                      onPress={() => {icon.onPress()}}
+                    >
                         <Ionicons
                             name={icon.name}
                             size={icon.size}
@@ -88,6 +90,7 @@ const dynamicStyles = {
         flexDirection: "column",
         position: "relative",
         overflow: "hidden",
+        marginVertical: 15,
     }),
 }
 

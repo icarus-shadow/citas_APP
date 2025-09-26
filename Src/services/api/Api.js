@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const URL_BASE = "http://10.20.201.227:8000/api";
+const URL_BASE = "http://10.0.0.33:8000/api";
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'user_data';
 
@@ -25,7 +25,7 @@ class ApiService {
             console.log(`Token: ${token}`);
             config.headers.Authorization = `Bearer ${token}`;
         }
-        console.log(`url completa para la request: ${url} `);
+        console.log(`[API] url completa para la request: ${url} `);
 
         try {
             const response = await fetch(url, config);
@@ -34,19 +34,19 @@ class ApiService {
             try {
                 data = await response.json();
             } catch {
-                data = { message: 'Error del servidor' };
+                data = { message: '[API] Error del servidor' };
             }
 
             if (!response.ok) {
                 if (response.status === 401) {
                     await this.removeToken();
-                    const error = new Error('Sesión expirada, inicie nuevamente');
+                    const error = new Error('[API] Sesión expirada, inicie nuevamente');
                     error.status = response.status;
                     error.sessionExpired = true;
                     throw error;
                 }
 
-                const error = new Error(data.message || 'Error desconocido');
+                const error = new Error(data.message || '[API] Error desconocido');
                 error.status = response.status;
                 throw error;
             }
@@ -54,7 +54,7 @@ class ApiService {
             return data;
         } catch (error) {
             if (!error.status) {
-                error.message = 'Error de conexión. Verifica tu internet.';
+                error.message = '[API] Error de conexión. Verifica tu internet.';
             }
             throw error;
         }
@@ -72,7 +72,7 @@ class ApiService {
         try {
             await AsyncStorage.setItem(TOKEN_KEY, token);
         } catch (error) {
-            console.error(`Error al guardar token: ${error}`);
+            console.error(`[API] Error al guardar token: ${error}`);
         }
     }
 
@@ -81,7 +81,7 @@ class ApiService {
             await AsyncStorage.removeItem(TOKEN_KEY);
             await AsyncStorage.removeItem(USER_KEY);
         } catch (error) {
-            console.error(`Error al eliminar token: ${error}`);
+            console.error(`[API] Error al eliminar token: ${error}`);
         }
     }
 
@@ -101,7 +101,23 @@ class ApiService {
     }
 
     async getCurrentUser() {
+        return await this.request('/user', { method: 'GET' });
+    }
+
+    async logout() {
+        await this.removeToken();
+        await AsyncStorage.removeItem(USER_KEY);
+        return true;
+    }
+
+    async getPaciente() {
         return await this.request('/mi-perfil', { method: 'GET' });
+    }
+    async getDoctor() {
+        return await this.request('/mi-perfil-doctor', { method: 'GET' });
+    }
+    async getAdmin() {
+        return await this.request('/mi-perfil-admin', { method: 'GET' });
     }
 }
 

@@ -7,7 +7,6 @@ export const colors = {
     error: '#ff6b6b',
     success: '#4ade80',
 
-
     backgroundResalt: '#96cbcb',
     primaryResalt: '#2c8092',
     secondaryResalt: '#28b9d8',
@@ -35,5 +34,3 @@ export const darkColors = {
     errorResalt: '#eaa2a2',
     successResalt: '#5eba6e',
 }
-
-
