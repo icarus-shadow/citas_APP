@@ -11,6 +11,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../../utils/slices/AuthSlice";
 import {colors, darkColors} from "../../utils/desing/Colors";
+import CustomAlert from "../../components/CustomAlert";
 
 let col = colors;
 
@@ -21,22 +22,33 @@ const LoginScreen = ({ navigation }) => {
     const isDark = useSelector((state) => state.darkMode.value);
     isDark ? col = colors : col = darkColors;
 
+
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState("success");
+    const [alertMessage, setAlertMessage] = useState("");
+
+    const showAlert = (type, message) => {
+        setAlertType(type);
+        setAlertMessage(message);
+        setAlertVisible(true);
+    };
+
     const dispatch = useDispatch();
     const { isLoading, error, token, user } = useSelector((state) => state.auth);
 
     const handleLogin = () => {
         if (!email || !password) {
-            Alert.alert("Error", "Por favor completa todos los campos");
+            showAlert("error", "Por favor completa todos los campos");
             return;
         }
 
         dispatch(login({ email, password }))
             .unwrap()
             .then(() => {
-                Alert.alert("Éxito", "Inicio de sesión exitoso");
+                showAlert("success", "Inicio de sesión exitoso");
             })
             .catch((err) => {
-                Alert.alert("Error de login", err || "Ocurrió un error al iniciar sesión");
+                showAlert("error", err || "Ocurrió un error al iniciar sesión");
             });
     };
 
@@ -83,6 +95,14 @@ const LoginScreen = ({ navigation }) => {
                     <Text style={dynamicStyles.buttonText(col)}>Registrarse</Text>
                 </TouchableOpacity>
                 {error && <Text style={dynamicStyles.errorText(col)}>{error}</Text>}
+
+                <CustomAlert
+                    visible={alertVisible}
+                    type={alertType}
+                    message={alertMessage}
+                    durationInSec={3}
+                    onClose={() => setAlertVisible(false)}
+                />
             </View>
         </SafeAreaView>
     );
