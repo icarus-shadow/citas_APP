@@ -95,12 +95,6 @@ export default function SlidingTopScreen({ screens = [] }) {
             pointerEvents="box-none"
             {...panResponder.panHandlers}
         >
-            <View style={[styles.handleRow, { height: handleHeight, backgroundColor: col.secondaryResalt }]}>
-                <TouchableOpacity style={styles.centerHandle} onPress={() => translateY._value === 0 ? close() : open()}>
-                    <View style={[styles.handleBar, { backgroundColor: col.primary }]} />
-                </TouchableOpacity>
-            </View>
-
             <View style={{ flexDirection: "row", width, height: overlayHeight - handleHeight }}>
                 <View style={{ flex: 1 }}>
                     {ActiveComponent ? (
@@ -121,6 +115,7 @@ export default function SlidingTopScreen({ screens = [] }) {
                     <Ionicons name="settings" size={24} color={col.primaryResalt} />
                     <Text style={[styles.iconLabel, { color: col.text }]}>{screens[0]?.label}</Text>
                 </TouchableOpacity>
+
 
                 <TouchableOpacity
                     style={styles.iconRight}

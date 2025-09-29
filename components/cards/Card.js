@@ -1,36 +1,24 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import {Ionicons} from "@expo/vector-icons";
-import {colors, darkColors} from "../utils/desing/Colors";
+import {colors, darkColors} from "../../utils/desing/Colors";
 import {useSelector} from "react-redux";
 
 
-const Card = ({title, subtitle, icons}) => {
+const Card = ({title, subtitle, count, icons}) => {
     let col = colors;
     const isDark = useSelector((state) => state.darkMode.value);
     isDark ? col = colors : col = darkColors;
 
     return (
         <View style={dynamicStyles.card(col)}>
-            <View style={dynamicStyles.circle(col)} />
+            <View style={dynamicStyles.circle(col)}>
+                <Text style={dynamicStyles.count(col)}>{count}</Text>
+            </View>
 
             <View style={styles.textContainer}>
                 <Text style={dynamicStyles.title(col)}>{title}</Text>
                 <Text style={dynamicStyles.subtitle(col)}>{subtitle}</Text>
-            </View>
-
-            <View style={styles.iconsContainer}>
-                {icons.map((icon, index) => (
-                    <TouchableOpacity key={index} style={dynamicStyles.btn(col)}
-                                      onPress={() => {icon.onPress()}}
-                    >
-                        <Ionicons
-                            name={icon.name}
-                            size={icon.size}
-                            color={icon.color}
-                        />
-                    </TouchableOpacity>
-                ))}
             </View>
         </View>
     );
@@ -55,6 +43,11 @@ const styles = StyleSheet.create({
 });
 
 const dynamicStyles = {
+    count: (col) => ({
+        color: col.textResalt,
+        fontWeight: "900",
+        fontSize: 50,
+    }),
     btn: (col)=> ({
         width: 84,
         height: 35,
@@ -63,19 +56,21 @@ const dynamicStyles = {
         borderRadius: 5,
     }),
     subtitle: (col)=> ({
-        fontSize: 12,
+        fontSize: 15,
         fontWeight: "300",
         color: col.textResalt,
     }),
     title: (col) => ({
         color: col.text,
         fontWeight: "900",
-        fontSize: 18,
+        fontSize: 24,
     }),
     circle: (col) => ({
+        alignItems: "center",
+        justifyContent: "center",
         position: "absolute",
-        top: "-30%",
-        left: "-30%",
+        top: "-25%",
+        left: "60%",
         width: 200,
         height: 200,
         borderRadius: 50,

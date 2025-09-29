@@ -7,9 +7,11 @@ import {
     ScrollView,
     TouchableOpacity,
     SafeAreaView,
+    TouchableWithoutFeedback,
 } from 'react-native';
-import {useSelector} from "react-redux";
+import {useSelector, useDispatch} from "react-redux";
 import {colors, darkColors} from "../../utils/desing/Colors";
+import ApiService from "../../Src/services/api/Api";
 
 
 
@@ -26,15 +28,41 @@ const RegisterScreen = ({navigation}) => {
     const [documento, setDocumento] = useState('');
     const [rh, setRh] = useState('');
     const [fechaNacimiento, setFechaNacimiento] = useState('');
-    const [genero, setGenero] = useState('');
+    const [genero, setGenero] = useState('M');
     const [edad, setEdad] = useState('');
     const [telefono, setTelefono] = useState('');
     const [alergias, setAlergias] = useState('');
     const [apellidos, setApellidos] = useState('');
+    const [comentarios, setComentarios] = useState('');
+    const [error, setError] = useState('');
+    const dispatch = useDispatch();
 
-    const handleRegister = () => {
-        console.log('Register pressed:', email, password);
-        // TODO: Implementar lógica de registro
+    const handleRegister = async () => {
+        setError('');
+        try {
+            const userData = {
+                email,
+                password,
+                nombres,
+                apellidos,
+                documento,
+                rh,
+                fecha_nacimiento: fechaNacimiento,
+                genero,
+                edad: edad,
+                telefono,
+                alergias,
+                comentarios
+            };
+
+            const result = await ApiService.register(userData);
+            console.log(result);
+            if (result.paciente) {
+                navigation.navigate('Login');
+            }
+        } catch (err) {
+            setError(err.toString());
+        }
     };
 
     return (
@@ -86,12 +114,56 @@ const RegisterScreen = ({navigation}) => {
                     value={fechaNacimiento}
                     onChangeText={setFechaNacimiento}
                 />
-                <TextInput
-                    style={dynamicStyles.input(col)}
-                    placeholder="Género"
-                    value={genero}
-                    onChangeText={setGenero}
-                />
+                <View style={[dynamicStyles.input(col), {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-around'
+                }]}>
+                    <TouchableWithoutFeedback onPress={() => setGenero('M')}>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <View style={{
+                                height: 20,
+                                width: 20,
+                                borderRadius: 10,
+                                borderWidth: 2,
+                                borderColor: col.accent,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 5,
+                            }}>
+                                {genero === 'M' && <View style={{
+                                    height: 12,
+                                    width: 12,
+                                    borderRadius: 6,
+                                    backgroundColor: col.accent,
+                                }}/>}
+                            </View>
+                            <Text style={{color: col.text}}>Masculino</Text>
+                        </View>
+                    </TouchableWithoutFeedback>
+                    <TouchableWithoutFeedback onPress={() => setGenero('F')}>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <View style={{
+                                height: 20,
+                                width: 20,
+                                borderRadius: 10,
+                                borderWidth: 2,
+                                borderColor: col.accent,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 5,
+                            }}>
+                                {genero === 'F' && <View style={{
+                                    height: 12,
+                                    width: 12,
+                                    borderRadius: 6,
+                                    backgroundColor: col.accent,
+                                }}/>}
+                            </View>
+                            <Text style={{color: col.text}}>Femenino</Text>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </View>
                 <TextInput
                     style={dynamicStyles.input(col)}
                     placeholder="Edad"
@@ -114,6 +186,7 @@ const RegisterScreen = ({navigation}) => {
                     multiline
                 />
 
+                {error ? <Text style={{color: 'red', marginBottom: 10}}>{error}</Text> : null}
                 <TouchableOpacity style={dynamicStyles.button(col)} onPress={handleRegister}>
                     <Text style={dynamicStyles.buttonText(col)}>Registrarse</Text>
                 </TouchableOpacity>

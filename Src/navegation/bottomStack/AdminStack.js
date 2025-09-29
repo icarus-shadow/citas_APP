@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { colors, darkColors } from "../../../utils/desing/Colors";
 import { useSelector } from "react-redux";
-import BottomTab from "../../../components/BottomTab";
 import SlidingTopScreen from "../../../components/SlidingTopScreen";
 
 import InicioMain from "../../../screens/pages/administradores/bottomTab/inicio/InicioMain";
@@ -16,6 +15,8 @@ import HorariosMain from "../../../screens/pages/administradores/bottomTab/horar
 import ConfiguracionMain from "../../../screens/pages/commonPages/topTab/configuracion/ConfiguracionMain";
 import PerfilMain from "../../../screens/pages/commonPages/topTab/perfil/PerfilMain";
 
+import ScreenWithTab from "../ScreenWithTab";
+
 const Stack = createNativeStackNavigator();
 
 export default function AdminStack() {
@@ -24,7 +25,7 @@ export default function AdminStack() {
 
     const tabs = [
         { key: "Inicio", icon: "home", label: "Inicio", route: "Inicio" },
-        { key: "pacientes", icon: "person", label: "pacientes", route: "Pacientes" },
+        { key: "Pacientes", icon: "person-outline", label: "Pacientes", route: "Pacientes" },
         { key: "Doctores", icon: "pulse", label: "Doctores", route: "Doctores" },
         { key: "Citas", icon: "alarm", label: "Citas", route: "Citas" },
         { key: "Horarios", icon: "calendar", label: "Horarios", route: "Horarios" },
@@ -34,16 +35,48 @@ export default function AdminStack() {
         <SafeAreaProvider>
             <SafeAreaView style={{ flex: 1, backgroundColor: col.secondaryResalt }}>
                 <View style={{ flex: 1, backgroundColor: col.background }}>
-                    <Stack.Navigator id="stackPaciente" screenOptions={{ headerShown: false }}>
-                        <Stack.Screen name="Inicio" component={InicioMain} />
-                        <Stack.Screen name="Citas" component={CitasMain} />
-                        <Stack.Screen name="Doctores" component={DoctoresMain} />
-                        <Stack.Screen name="Pacientes" component={PacientesMain} />
-                        <Stack.Screen name="Horarios" component={HorariosMain} />
+                    <Stack.Navigator screenOptions={{ headerShown: false }}>
+                        <Stack.Screen
+                            name="Inicio"
+                            children={() => (
+                                <ScreenWithTab tabs={tabs} initialTab="Inicio">
+                                    <InicioMain />
+                                </ScreenWithTab>
+                            )}
+                        />
+                        <Stack.Screen
+                            name="Citas"
+                            children={() => (
+                                <ScreenWithTab tabs={tabs} initialTab="Citas">
+                                    <CitasMain />
+                                </ScreenWithTab>
+                            )}
+                        />
+                        <Stack.Screen
+                            name="Doctores"
+                            children={() => (
+                                <ScreenWithTab tabs={tabs} initialTab="Doctores">
+                                    <DoctoresMain />
+                                </ScreenWithTab>
+                            )}
+                        />
+                        <Stack.Screen
+                            name="Pacientes"
+                            children={() => (
+                                <ScreenWithTab tabs={tabs} initialTab="Pacientes">
+                                    <PacientesMain />
+                                </ScreenWithTab>
+                            )}
+                        />
+                        <Stack.Screen
+                            name="Horarios"
+                            children={() => (
+                                <ScreenWithTab tabs={tabs} initialTab="Horarios">
+                                    <HorariosMain />
+                                </ScreenWithTab>
+                            )}
+                        />
                     </Stack.Navigator>
-
-                    <BottomTab tabs={tabs} initialTab="Inicio" />
-
                     <SlidingTopScreen
                         screens={[
                             { key: "Configuracion", component: ConfiguracionMain, label: "Configuración" },

@@ -8,6 +8,7 @@ import {
     SafeAreaView,
     Alert,
 } from "react-native";
+import {Ionicons} from '@expo/vector-icons';
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../../utils/slices/AuthSlice";
 import {colors, darkColors} from "../../utils/desing/Colors";
@@ -18,6 +19,7 @@ let col = colors;
 const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
     const isDark = useSelector((state) => state.darkMode.value);
     isDark ? col = colors : col = darkColors;
@@ -72,15 +74,27 @@ const LoginScreen = ({ navigation }) => {
                     onChangeText={setEmail}
                     editable={!isLoading}
                 />
-                <TextInput
-                    style={dynamicStyles.input(col)}
-                    placeholder="Password"
-                    placeholderTextColor={col.text}
-                    secureTextEntry
-                    value={password}
-                    onChangeText={setPassword}
-                    editable={!isLoading}
-                />
+                <View style={styles.passwordContainer}>
+                    <TextInput
+                        style={[dynamicStyles.input(col), {flex: 1, marginBottom: 0}]}
+                        placeholder="Password"
+                        placeholderTextColor={col.text}
+                        secureTextEntry={!showPassword}
+                        value={password}
+                        onChangeText={setPassword}
+                        editable={!isLoading}
+                    />
+                    <TouchableOpacity
+                        style={styles.eyeIcon}
+                        onPress={() => setShowPassword(!showPassword)}
+                    >
+                        <Ionicons
+                            name={showPassword ? "eye-outline" : "eye-off-outline"}
+                            size={24}
+                            color={col.text}
+                        />
+                    </TouchableOpacity>
+                </View>
                 <TouchableOpacity
                     style={[dynamicStyles.button(col), isLoading && { opacity: 0.5 }]}
                     onPress={handleLogin}
@@ -116,6 +130,18 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         padding: 20,
+    },
+    passwordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 15,
+        position: 'relative',
+    },
+    eyeIcon: {
+        position: 'absolute',
+        right: 10,
+        height: '100%',
+        justifyContent: 'center',
     },
 });
 

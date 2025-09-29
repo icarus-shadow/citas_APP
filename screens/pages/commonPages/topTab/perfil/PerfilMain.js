@@ -3,10 +3,11 @@ import React, {useState, useEffect} from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Api from "../../../../../Src/services/api/Api";
 import CustomAlert from "../../../../../components/CustomAlert";
-import DynamicFormModal from "../../../../../components/DynamicFormModal";
+import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
 import {View, Text, StyleSheet, ScrollView, ActivityIndicator, Modal, TextInput, TouchableOpacity} from "react-native";
 import {useSelector} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
+import {goToLogin} from "../../../../../Src/services/navigation/NavigationService";
 
 
 
@@ -17,6 +18,7 @@ export default function PerfilMain() {
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertType, setAlertType] = useState("success");
     const [alertMessage, setAlertMessage] = useState("");
+
     const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [formData, setFormData] = useState({});
@@ -122,6 +124,7 @@ export default function PerfilMain() {
                         <View style={styles.modalButtons}>
                             <TouchableOpacity style={styles.modalButton(col)} onPress={async () => {
                                 await Api.request('/logout', {method: 'POST'});
+                                goToLogin()
                                 setIsLogoutModalVisible(false);
                             }}>
                                 <Text style={styles.buttonText(col)}>Confirmar</Text>
@@ -149,7 +152,7 @@ export default function PerfilMain() {
                     }] : [])
                 ]}
                 initialData={usuario}
-                onCancel={() => setIsEditModalVisible(false)}
+                onCloses={() => setIsEditModalVisible(false)}
                 onSubmit={async (data) => {
                     try {
                         let endpoint = usuario.id_rol === 1 ? '/mi-perfil' :

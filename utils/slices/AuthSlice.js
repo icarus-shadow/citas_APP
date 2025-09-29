@@ -2,6 +2,29 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ApiService from '../../Src/services/api/Api';
 
+const validateRegistration = (data) => {
+    const required = ['email', 'password', 'nombres', 'apellidos', 'documento', 'rh', 'fecha_nacimiento', 'genero', 'edad'];
+    const errors = [];
+
+    required.forEach(field => {
+        if (!data[field]) errors.push(`${field} es requerido`);
+    });
+
+    if (data.password && data.password.length < 6) {
+        errors.push('La contraseña debe tener al menos 6 caracteres');
+    }
+
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        errors.push('Email inválido');
+    }
+
+    if (data.genero && !['M', 'F'].includes(data.genero)) {
+        errors.push('Género debe ser M o F');
+    }
+
+    return errors;
+};
+
 // Helper para evitar que la llamada se quede colgada
 const withTimeout = (promise, ms = 8000) =>
     Promise.race([
@@ -66,6 +89,35 @@ export const login = createAsyncThunk(
     }
 );
 
+export const register = createAsyncThunk(
+    '/register',
+    async (userData, {rejectWithValue}) => {
+        try {
+            const validationErrors = validateRegistration(userData);
+            if (validationErrors.length > 0) {
+                return rejectWithValue(validationErrors.join(', '));
+            }
+
+            const response = await ApiService.register(userData);
+            console.log('[AuthSlice] register response:', response);
+
+            const user = response.user || response.data?.user;
+            const token = response.token || response.data?.token;
+
+            if (!user || !token) return rejectWithValue('Respuesta inválida del servidor');
+
+            await AsyncStorage.setItem('auth_token', token);
+            await AsyncStorage.setItem('user_data', JSON.stringify(user));
+
+            return {user, token};
+        } catch (error) {
+            console.error('[AuthSlice] register error:', error);
+            return rejectWithValue(error?.response?.data || error.message || 'Error de registro');
+        }
+    }
+);
+
+
 const authSlice = createSlice({
     name: 'auth',
     initialState: {
@@ -107,6 +159,23 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.error = action.payload || action.error?.message;
                 console.log('[AuthSlice] login rejected:', state.error);
+            })
+
+            // register
+            .addCase(register.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(register.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.user = action.payload?.user || null;
+                state.token = action.payload?.token || null;
+                state.error = null;
+                console.log('[AuthSlice] register fulfilled — user:', !!state.user);
+            })
+            .addCase(register.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload || action.error?.message;
+                console.log('[AuthSlice] register rejected:', state.error);
             });
     },
 });

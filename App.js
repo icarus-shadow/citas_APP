@@ -5,7 +5,6 @@ import {StatusBar} from 'expo-status-bar';
 import {ActivityIndicator, Text, View} from 'react-native';
 import {checkAuthState} from './utils/slices/AuthSlice';
 import AppNavegacion from './Src/navegation/AppNavegacion';
-import SwitchDark from "./components/SwitchDark";
 import {colors, darkColors} from "./utils/desing/Colors";
 
 
@@ -32,7 +31,6 @@ const Main = () => {
 
     return (<>
         <StatusBar style="auto"/>
-        <SwitchDark/>
         <AppNavegacion/>
     </>);
 };

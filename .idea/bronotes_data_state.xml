@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BroNotes">
+    <option name="doneNotes">
+      <list>
+        <option value="configuracion de topbar" />
+        <option value="funcion global para redirijir al login" />
+        <option value="hacer inicio completo de Admin" />
+        <option value="hacer registrar funcional&#10;" />
+        <option value="hacer pacientes Admin" />
+        <option value="hacer doctores Admin" />
+      </list>
+    </option>
     <option name="todoNotes">
       <list>
-        <option value="hacer inicio completo de Admin" />
+        <option value="justar grupos api" />
+        <option value="hacer citas Admin&#10;" />
+        <option value="hacer Horarios Admin" />
+        <option value="hacer especialidades CRUD" />
       </list>
     </option>
   </component>
