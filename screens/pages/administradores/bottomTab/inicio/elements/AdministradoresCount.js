@@ -11,15 +11,15 @@ const AdministradoresCount = () => {
     useEffect(() => {
         const fetchAdministradoresCount = async () => {
             try {
-                const response = await ApiService.request('/countCitas');
+                const response = await ApiService.countAdministradores();
                 if (response.total === undefined) {
-                    console.log(`no hay citas`);
+                    console.log(`no hay administradores`);
                     setAdministradoresCount(0);
                 } else {
                     setAdministradoresCount(response.total);
                 }
             } catch (error) {
-                console.error('Error fetching citas count:', error);
+                console.error('Error fetching administradores count:', error);
             }
         };
         fetchAdministradoresCount();

@@ -59,6 +59,7 @@ export default function TableCitas() {
 
     const handleDelete = () => {
         const deleteCita = async () => {
+
             try {
                 const response = await ApiService.request(`/citas/${dataToEdit.id}`, {
                     method: 'DELETE',
@@ -80,17 +81,15 @@ export default function TableCitas() {
         const updateCita = async () => {
             try {
                 let body = {
-                    "nombres": item.nombres,
-                    "apellidos": item.apellidos,
-                    "documento": item.documento,
-                    "rh": item.rh,
-                    "fecha_nacimiento": item.fecha_nacimiento,
-                    "genero": item.genero,
-                    "edad": item.edad,
-                    "telefono": item.telefono,
-                    "alergias": item.alergias,
-                    "comentarios": item.comentarios
+                    "id_doctor": item.id_doctor,
+                    "id_paciente": item.id_paciente,
+                    "fecha_cita": item.fecha_cita,
+                    "hora_cita": item.hora_cita,
+                    "lugar": item.lugar,
+                    "motivo": " ",
                 };
+                console.log(item);
+                console.log(body);
 
 
                 const response = await ApiService.request(`/citas/${item.id}`, {

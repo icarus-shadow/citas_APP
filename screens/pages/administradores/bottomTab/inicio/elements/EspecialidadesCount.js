@@ -11,15 +11,15 @@ const EspecialidadesCount = () => {
     useEffect(() => {
         const fetchEspecialidadesCount = async () => {
             try {
-                const response = await ApiService.request('/countCitas');
+                const response = await ApiService.countEspecialidades();
                 if (response.total === undefined) {
-                    console.log(`no hay citas`);
+                    console.log(`no hay especialidades`);
                     setEspecialidadesCount(0);
                 } else {
                     setEspecialidadesCount(response.total);
                 }
             } catch (error) {
-                console.error('Error fetching citas count:', error);
+                console.error('Error fetching especialidades count:', error);
             }
         };
         fetchEspecialidadesCount();

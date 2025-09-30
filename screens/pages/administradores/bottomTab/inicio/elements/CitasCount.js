@@ -13,7 +13,7 @@ const CitasCount = () => {
     useEffect(() => {
         const fetchCitasCount = async () => {
             try {
-                const response = await ApiService.request('/countCitas');
+                const response = await ApiService.countCitas();
                 if (response.total === undefined) {
                     console.log(`no hay citas`);
                     setCitasCount(0);

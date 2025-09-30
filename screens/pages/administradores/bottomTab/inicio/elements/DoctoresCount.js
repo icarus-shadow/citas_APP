@@ -11,15 +11,15 @@ const DoctoresCount = () => {
     useEffect(() => {
         const fetchDoctoresCount = async () => {
             try {
-                const response = await ApiService.request('/countCitas');
+                const response = await ApiService.countDoctores();
                 if (response.total === undefined) {
-                    console.log(`no hay citas`);
+                    console.log(`no hay doctores`);
                     setDoctoresCount(0);
                 } else {
                     setDoctoresCount(response.total);
                 }
             } catch (error) {
-                console.error('Error fetching citas count:', error);
+                console.error('Error fetching doctores count:', error);
             }
         };
         fetchDoctoresCount();
