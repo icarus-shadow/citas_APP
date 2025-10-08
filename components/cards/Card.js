@@ -13,7 +13,11 @@ const Card = ({title, subtitle, count, icons}) => {
     return (
         <View style={dynamicStyles.card(col)}>
             <View style={dynamicStyles.circle(col)}>
-                <Text style={dynamicStyles.count(col)}>{count}</Text>
+                {React.isValidElement(count) ? (
+                    count
+                ) : (
+                    <Text style={dynamicStyles.count(col)}>{count}</Text>
+                )}
             </View>
 
             <View style={styles.textContainer}>

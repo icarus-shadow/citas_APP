@@ -23,6 +23,8 @@ export default function PerfilMain() {
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [formData, setFormData] = useState({});
 
+    const {user} = useSelector(state => state.auth);
+
     const showAlert = (type, message) => {
         setAlertType(type);
         setAlertMessage(message);
@@ -32,25 +34,28 @@ export default function PerfilMain() {
     const [usuario, setUsuario] = useState(null);
     const [email, setEmail] = useState("");
     const [especialidades, setEspecialidades] = useState([]);
+
+    const rol = user.id_rol;
+
     const cargarPerfil = async () => {
         try{
             const token = await Api.getToken();
-            console.log(`[perfilMain] token: ${token}`);
             if (!token){
                 showAlert("error", "No hay token de usuario");
                 return;
             }
             let response;
-            const user = await Api.getCurrentUser("/user");
-            setEmail(user.email);
+            const userA = await Api.getCurrentUser("/user");
+            setEmail(userA.email);
 
-            if (user.id_rol === 1) {
+            console.log(rol);
+            if (rol === 1) {
                 response = await Api.getPaciente("/mi-perfil");
-            } else if (user.id_rol === 2) {
+            } else if (rol === 2) {
                 response = await Api.getDoctor("/mi-perfil-doctor");
                 const espResponse = await Api.getEspecialidades();
                 setEspecialidades(espResponse);
-            } else if (user.id_rol === 3) {
+            } else if (rol === 3) {
                 response = await Api.getAdmin("/mi-perfil-admin");
             } else {
                 console.error("[perfilMain] Rol no valido");
@@ -142,21 +147,23 @@ export default function PerfilMain() {
                 visible={isEditModalVisible}
                 title="Editar Perfil"
                 fields={[
-                    {name: "nombres", label: "Nombres", placeholder: "Ingrese nombres"},
-                    {name: "apellidos", label: "Apellidos", placeholder: "Ingrese apellidos"},
-                    {name: "telefono", label: "Teléfono", placeholder: "Ingrese teléfono", keyboard: "numeric"},
-                    ...(usuario?.id_rol === 2 ? [{
-                        name: "especialidades",
-                        label: "Especialidades",
-                        placeholder: "Ingrese especialidades"
-                    }] : [])
+                    {name: "nombres", label: "Nombres", type: "text", placeholder: "Ingrese nombres"},
+                    {name: "apellidos", label: "Apellidos", type: "text", placeholder: "Ingrese apellidos"},
+                    {name: "telefono", label: "Teléfono", type: "text", placeholder: "Ingrese teléfono", keyboard: "phone-pad"},
+                    // ...(rol === 2 ? [{
+                    //     name: "especialidades",
+                    //     label: "Especialidades",
+                    //     placeholder: "Ingrese especialidades"
+                    // }] : [])
                 ]}
                 initialData={usuario}
                 onCloses={() => setIsEditModalVisible(false)}
+                
                 onSubmit={async (data) => {
                     try {
-                        let endpoint = usuario.id_rol === 1 ? '/mi-perfil' :
-                            usuario.id_rol === 2 ? '/mi-perfil-doctor' : '/mi-perfil-admin';
+                        console.log(rol);
+                        let endpoint = rol === 1 ? '/mi-perfil' :
+                            rol === 2 ? '/mi-perfil-doctor' : '/mi-perfil-admin';
                         await Api.request(endpoint, {
                             method: 'PUT',
                             body: JSON.stringify(data)

@@ -47,7 +47,7 @@ export default function DoctoresMain() {
         {
             name: 'motivo',
             label: 'Motivo de la Consulta',
-            type: 'text',
+            type: 'textarea',
             required: true,
             placeholder: 'Describa brevemente el motivo de su consulta'
         }

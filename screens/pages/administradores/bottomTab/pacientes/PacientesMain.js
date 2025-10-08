@@ -19,22 +19,22 @@ export default function PacientesMain() {
     const [modalVisible, setModalVisible] = useState(false);
     const formFields = [
         {name: 'email', label: 'Email', type: 'email', required: true},
-        {name: 'password', label: 'Contraseña', type: 'password', required: true, minLength: 6},
+        {name: 'password', label: 'Contraseña', type: 'text', secure: true, required: true, minLength: 6},
         {name: 'nombres', label: 'Nombres', type: 'text', required: true},
         {name: 'apellidos', label: 'Apellidos', type: 'text', required: true},
-        {name: 'documento', label: 'Documento', type: 'text', required: true},
+        {name: 'documento', label: 'Documento', type: 'number', required: true},
         {name: 'rh', label: 'RH', type: 'text', required: true},
-        {name: 'fecha_nacimiento', label: 'Fecha de Nacimiento', type: 'date', required: true},
+        {name: 'fecha_nacimiento', label: 'Fecha de Nacimiento', type: 'text', required: true},
         {
             name: 'genero', label: 'Género', type: 'select', required: true, options: [
                 {label: 'Masculino', value: 'M'},
                 {label: 'Femenino', value: 'F'}
             ]
         },
-        {name: 'edad', label: 'Edad', type: 'text', required: true},
-        {name: 'telefono', label: 'Teléfono', type: 'text'},
-        {name: 'alergias', label: 'Alergias', type: 'text'},
-        {name: 'comentarios', label: 'Comentarios', type: 'text'},
+        {name: 'edad', label: 'Edad', type: 'number', required: true},
+        {name: 'telefono', label: 'Teléfono', type: 'text', keyboard: 'phone-pad'},
+        {name: 'alergias', label: 'Alergias', type: 'textarea'},
+        {name: 'comentarios', label: 'Comentarios', type: 'textarea'},
     ];
     const fetchPacientesCount = async () => {
         try {

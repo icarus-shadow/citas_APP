@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const URL_BASE = "http://10.20.201.227:8000/api";
+const URL_BASE = "http://10.55.37.227:8000/api";
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'user_data';
 
@@ -22,13 +22,11 @@ class ApiService {
         // Añadir token si existe
         const token = await this.getToken();
         if (token) {
-            console.log(`[API] Token encontrado: ${token.substring(0, 20)}...`);
             config.headers.Authorization = `Bearer ${token}`;
         } else {
             console.log(`[API] No hay token disponible`);
         }
         console.log(`[API] Request: ${options.method || 'GET'} ${url}`);
-        console.log(`[API] Headers:`, config.headers);
 
         try {
             const response = await fetch(url, config)
@@ -237,7 +235,7 @@ class ApiService {
         return await this.request('/countHorarios', { method: 'GET' });
     }
 
-    // Método de diagnóstico para verificar autenticación
+    // Méodo de diagnóstico para verificar autenticación
     async checkAuthStatus() {
         try {
             const token = await this.getToken();

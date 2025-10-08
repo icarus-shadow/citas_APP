@@ -17,21 +17,8 @@ export default function HorariosMain() {
 
     const [horariosCount, setHorariosCount] = useState(0);
     const [modalVisible, setModalVisible] = useState(false);
-    const [doctors, setDoctors] = useState([]);
     const formFields = [
-        {
-            name: 'id_doctor',
-            label: 'Doctor',
-            type: 'select',
-            required: true,
-            options: doctors.filter(doctor => doctor && doctor.id && doctor.nombres && doctor.apellidos).map(doctor => {
-                console.log('[DEBUG] Mapping doctor:', doctor);
-                return {
-                    label: doctor.nombres + " " + doctor.apellidos,
-                    value: doctor.id
-                };
-            })
-        },
+        {name: 'nombre', label: 'Nombre del Horario', type: 'text', required: true},
         {
             name: 'dias',
             label: 'Días',
@@ -64,32 +51,8 @@ export default function HorariosMain() {
             console.error('Error:', error);
         }
     };
-    const fetchDoctors = async () => {
-        try {
-            const response = await ApiService.request('/doctores');
-            console.log('[DEBUG] fetchDoctors response:', response);
-            console.log('[DEBUG] fetchDoctors response type:', typeof response);
-            console.log('[DEBUG] fetchDoctors is array:', Array.isArray(response));
-            
-            if (Array.isArray(response)) {
-                response.forEach((doctor, index) => {
-                    console.log(`[DEBUG] Doctor ${index}:`, doctor);
-                    console.log(`[DEBUG] Doctor ${index} has id:`, doctor && doctor.id);
-                    console.log(`[DEBUG] Doctor ${index} has nombres:`, doctor && doctor.nombres);
-                    console.log(`[DEBUG] Doctor ${index} has apellidos:`, doctor && doctor.apellidos);
-                });
-            }
-            
-            setDoctors(response || []);
-        } catch (error) {
-            console.error('[DEBUG] Error fetching doctors:', error);
-            setDoctors([]);
-        }
-    };
-
     useEffect(() => {
         fetchHorariosCount();
-        fetchDoctors();
     }, []);
 
     const handleNewHorario = () => {
@@ -105,7 +68,7 @@ export default function HorariosMain() {
         console.log('[DEBUG] handleSubmit formData:', formData);
         try {
             const horarioData = {
-                id_doctor: formData.id,
+                nombre: formData.nombre,
                 dias: formData.dias,
                 hora_inicio: formData.hora_inicio,
                 hora_fin: formData.hora_fin
@@ -117,11 +80,11 @@ export default function HorariosMain() {
             });
             if (response) {
                 setModalVisible(false);
-                Alert.alert("Éxito", "Horario registrado correctamente");
+                Alert.alert("Éxito", "Plantilla de horario registrada correctamente");
                 fetchHorariosCount();
             }
         } catch (error) {
-            Alert.alert("Error", error.message || "Error al registrar horario");
+            Alert.alert("Error", error.message || "Error al registrar plantilla de horario");
         }
     }
 

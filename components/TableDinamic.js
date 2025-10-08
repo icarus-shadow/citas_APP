@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 
-const TableDinamic = ({ columns, data, onView }) => {
+const TableDinamic = ({ columns, data, onView, onAssign, renderActions }) => {
     return (
         <ScrollView horizontal>
             <View>
@@ -26,9 +26,18 @@ const TableDinamic = ({ columns, data, onView }) => {
                                 </View>
                             ))}
                             <View style={[styles.cell, styles.actionsCell]}>
-                                <TouchableOpacity style={[styles.button, styles.viewBtn]} onPress={() => onView(item)}>
-                                    <Text style={styles.buttonText}>Ver</Text>
-                                </TouchableOpacity>
+                                {renderActions ? renderActions(item) : (
+                                    <>
+                                        <TouchableOpacity style={[styles.button, styles.viewBtn]} onPress={() => onView(item)}>
+                                            <Text style={styles.buttonText}>Ver</Text>
+                                        </TouchableOpacity>
+                                        {onAssign && (
+                                            <TouchableOpacity style={[styles.button, styles.assignBtn]} onPress={() => onAssign(item)}>
+                                                <Text style={styles.buttonText}>Asignar</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </>
+                                )}
                             </View>
                         </View>
                     )}
@@ -82,6 +91,9 @@ const styles = StyleSheet.create({
     },
     viewBtn: {
         backgroundColor: '#17a2b8',
+    },
+    assignBtn: {
+        backgroundColor: '#28a745',
     },
 });
 

@@ -18,15 +18,16 @@ export default function DoctoresMain() {
     const [doctoresCount, setDoctoresCount] = useState(0);
     const [modalVisible, setModalVisible] = useState(false);
     const [especialidades, setEspecialidades] = useState([]);
+    const [horarios, setHorarios] = useState([]);
     const [formFields, setFormFields] = useState([]);
 
     useEffect(() => {
         setFormFields([
             {name: 'email', label: 'Email', type: 'email', required: true},
-            {name: 'password', label: 'Contraseña', type: 'password', required: true, minLength: 6},
+            {name: 'password', label: 'Contraseña', type: 'text', secure: true, required: true, minLength: 6},
             {name: 'nombres', label: 'Nombres', type: 'text', required: true},
             {name: 'apellidos', label: 'Apellidos', type: 'text', required: true},
-            {name: 'cedula', label: 'Cédula', type: 'text', required: true},
+            {name: 'cedula', label: 'Cédula', type: 'number', required: true},
             {
                 name: 'id_especialidades',
                 label: 'Especialidad',
@@ -34,10 +35,19 @@ export default function DoctoresMain() {
                 required: true,
                 options: especialidades.map(esp => ({value: esp.id, label: esp.nombre}))
             },
-            {name: 'horario', label: 'Horario', type: 'text'},
+            {
+                name: 'id_horario',
+                label: 'Horario (Opcional)',
+                type: 'select',
+                required: false,
+                options: [
+                    {value: '', label: 'Sin horario'},
+                    ...horarios.map(h => ({value: h.id, label: h.nombre}))
+                ]
+            },
             {name: 'lugar_trabajo', label: 'Lugar de Trabajo', type: 'text'},
         ]);
-    }, [especialidades]);
+    }, [especialidades, horarios]);
     const fetchDoctoresCount = async () => {
         try {
             const response = await ApiService.request('/countDoctores');
@@ -61,9 +71,19 @@ export default function DoctoresMain() {
         }
     };
 
+    const fetchHorarios = async () => {
+        try {
+            const response = await ApiService.request('/horarios');
+            setHorarios(response);
+        } catch (error) {
+            console.error('Error fetching horarios:', error);
+        }
+    };
+
     useEffect(() => {
         fetchDoctoresCount();
         fetchEspecialidades();
+        fetchHorarios();
     }, []);
 
     const handleNewPaciente = () => {
@@ -84,9 +104,13 @@ export default function DoctoresMain() {
                 apellidos: formData.apellidos,
                 cedula: formData.cedula,
                 id_especialidades: formData.id_especialidades,
-                horario: formData.horario,
                 lugar_trabajo: formData.lugar_trabajo
             };
+
+            // Solo incluir id_horario si se seleccionó uno
+            if (formData.id_horario && formData.id_horario !== '') {
+                userData.id_horario = formData.id_horario;
+            }
 
             const response = await ApiService.request('/registrar-doctor', {
                 method: 'POST',
@@ -98,7 +122,20 @@ export default function DoctoresMain() {
                 fetchDoctoresCount();
             }
         } catch (error) {
-            Alert.alert("Error", error.message || "Error al registrar doctor");
+            if (error.conflictos && error.conflictos.length > 0) {
+                // Mostrar detalles del conflicto
+                const conflicto = error.conflictos[0];
+                const diasMap = {
+                    1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves',
+                    5: 'Viernes', 6: 'Sábado', 7: 'Domingo'
+                };
+                Alert.alert(
+                    "Conflicto de Horarios",
+                    `No se puede asignar el horario porque hay un conflicto el ${diasMap[conflicto.dia]}.`
+                );
+            } else {
+                Alert.alert("Error", error.message || "Error al registrar doctor");
+            }
         }
     }
 

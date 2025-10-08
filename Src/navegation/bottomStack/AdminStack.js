@@ -11,6 +11,7 @@ import CitasMain from "../../../screens/pages/administradores/bottomTab/citas/Ci
 import DoctoresMain from "../../../screens/pages/administradores/bottomTab/doctores/DoctoresMain";
 import PacientesMain from "../../../screens/pages/administradores/bottomTab/pacientes/PacientesMain";
 import HorariosMain from "../../../screens/pages/administradores/bottomTab/horarios/HorariosMain";
+import NotificacionesMain from "../../../screens/pages/administradores/bottomTab/notificaciones/NotificacionesMain";
 
 import ConfiguracionMain from "../../../screens/pages/commonPages/topTab/configuracion/ConfiguracionMain";
 import PerfilMain from "../../../screens/pages/commonPages/topTab/perfil/PerfilMain";
@@ -29,6 +30,7 @@ export default function AdminStack() {
         { key: "Doctores", icon: "pulse", label: "Doctores", route: "Doctores" },
         { key: "Citas", icon: "alarm", label: "Citas", route: "Citas" },
         { key: "Horarios", icon: "calendar", label: "Horarios", route: "Horarios" },
+        { key: "Notificaciones", icon: "notifications", label: "Notificaciones", route: "Notificaciones" },
     ];
 
     return (
@@ -73,6 +75,14 @@ export default function AdminStack() {
                             children={() => (
                                 <ScreenWithTab tabs={tabs} initialTab="Horarios">
                                     <HorariosMain />
+                                </ScreenWithTab>
+                            )}
+                        />
+                        <Stack.Screen
+                            name="Notificaciones"
+                            children={() => (
+                                <ScreenWithTab tabs={tabs} initialTab="Notificaciones">
+                                    <NotificacionesMain />
                                 </ScreenWithTab>
                             )}
                         />

@@ -10,6 +10,7 @@ export default function TableDoctores() {
     const [visible, setVisible] = useState(false);
     const [dataToEdit, setDataToEdit] = useState(null);
     const [especialidades, setEspecialidades] = useState({});
+    const [horarios, setHorarios] = useState([]);
 
     const fetchEspecialidades = async () => {
         const response = await ApiService.request('/especialidades');
@@ -20,23 +21,51 @@ export default function TableDoctores() {
         setEspecialidades(especialidadesMap);
     };
 
+    const fetchHorarios = async () => {
+        try {
+            const response = await ApiService.request('/horarios');
+            setHorarios(response);
+        } catch (error) {
+            console.error('Error fetching horarios:', error);
+        }
+    };
+
     const fetchDoctores = async () => {
         const response = await ApiService.request('/doctores');
-        const doctoresConEspecialidad = response.map(doctor => ({
-            ...doctor,
-            especialidad: especialidades[doctor.id_especialidades] || doctor.id_especialidades
-        }));
+        const doctoresConEspecialidad = response.map(doctor => {
+            // Convertir horarios_asignados de array de strings a array de objetos {id, nombre}
+            const horariosAsignadosArray = doctor.horarios_asignados && doctor.horarios_asignados.length > 0
+                ? doctor.horarios_asignados.map(nombre => {
+                    const horario = horarios.find(h => h.nombre === nombre);
+                    return horario ? { id: horario.id, nombre: horario.nombre } : null;
+                }).filter(h => h !== null)
+                : [];
+
+            return {
+                ...doctor,
+                especialidad: especialidades[doctor.id_especialidades] || doctor.id_especialidades,
+                horarios_asignados: horariosAsignadosArray,
+                horarios_asignados_display: horariosAsignadosArray.length > 0
+                    ? horariosAsignadosArray.map(h => h.nombre).join(', ')
+                    : 'Sin horarios asignados',
+                // Campos que se convierten en selects al editar (usar nombres diferentes para evitar conflicto)
+                especialidad_select: doctor.id_especialidades || '',
+            };
+        });
         setData(doctoresConEspecialidad);
-        setColumns(["nombres", "apellidos", "cedula", "especialidad", "horario"]);
+        setColumns(["nombres", "apellidos", "cedula", "especialidad", "horarios_asignados_display"]);
     };
 
     useEffect(() => {
         fetchEspecialidades();
+        fetchHorarios();
     }, []);
 
     useEffect(() => {
-        fetchDoctores();
-    }, [especialidades]);
+        if (Object.keys(especialidades).length > 0 && horarios.length > 0) {
+            fetchDoctores();
+        }
+    }, [especialidades, horarios]);
 
     const handleView = (item) => {
         setDataToEdit(item);
@@ -62,35 +91,71 @@ export default function TableDoctores() {
         deleteDoctor();
     };
 
-    const handleSave = (item) => {
-        const updateDoctor = async () => {
-            try {
-                let body = {
-                    "nombres": item.nombres,
-                    "apellidos": item.apellidos,
-                    "cedula": item.cedula,
-                    "fecha_nacimiento": item.fecha_nacimiento,
-                    "id_especialidades": item.id_especialidades
-                };
+    const handleSave = async (item) => {
+        try {
+            let body = {
+                "nombres": item.nombres,
+                "apellidos": item.apellidos,
+                "cedula": item.cedula
+            };
 
-
-                const response = await ApiService.request(`/doctor/${item.id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(body)
-                    ,
-                });
-
-                if (response) {
-                    Alert.alert("Éxito", "Doctor actualizado correctamente");
-                    fetchDoctores();
-                }
-            } catch (error) {
-                Alert.alert("Error", error.message || "Error al actualizar paciente");
-            }finally {
-                setVisible(false);
+            // Solo incluir especialidad si se cambió
+            if (item.especialidad_select !== undefined && item.especialidad_select !== dataToEdit.id_especialidades) {
+                body.especialidad = item.especialidad_select;
             }
+
+            // Si solo hay campos básicos (sin cambios), no enviar petición
+            if (Object.keys(body).length <= 3) { // Solo nombres, apellidos, cedula
+                // No mostrar mensaje de "no changes" porque los horarios pueden haber cambiado
+                // Los horarios se manejan en InfoCard
+                fetchDoctores(); // Refresh data anyway
+                setVisible(false);
+                return;
+            }
+
+            const response = await ApiService.request(`/doctor/${item.id}`, {
+                method: 'PUT',
+                body: JSON.stringify(body)
+            });
+
+            if (response) {
+                Alert.alert("Éxito", "Doctor actualizado correctamente");
+                fetchDoctores();
+            }
+        } catch (error) {
+            if (error.conflictos && error.conflictos.length > 0) {
+                // Mostrar detalles del conflicto
+                const conflicto = error.conflictos[0];
+                const diasMap = {
+                    1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves',
+                    5: 'Viernes', 6: 'Sábado', 7: 'Domingo'
+                };
+                Alert.alert(
+                    "Conflicto de Horarios",
+                    `No se puede asignar el horario porque hay un conflicto el ${diasMap[conflicto.dia]}.`
+                );
+            } else {
+                Alert.alert("Error", error.message || "Error al actualizar doctor");
+            }
+        } finally {
+            setVisible(false);
         }
-        updateDoctor();
+    };
+
+    // Crear opciones para los selects
+    const selectFields = {
+        especialidad: {
+            options: Object.keys(especialidades).map(id => ({
+                value: parseInt(id),
+                label: especialidades[id]
+            }))
+        },
+        horario: {
+            options: [
+                { value: '', label: 'Sin horario asignado' },
+                ...horarios.map(h => ({ value: h.id, label: h.nombre }))
+            ]
+        }
     };
 
     return (
@@ -105,7 +170,10 @@ export default function TableDoctores() {
                 <InfoCard
                     data={dataToEdit}
                     visible={visible}
-                    hiddenFields={["id", "updated_at", "created_at", "user_id"]}
+                    hiddenFields={["id", "updated_at", "created_at", "user_id", "horarios_asignados", "id_especialidades", "id_horario", "especialidad_display", "horario"]}
+                    selectFields={selectFields}
+                    availableHorarios={horarios}
+                    showHorarios={true}
                     onClose={() => setVisible(false)}
                     onDelete={handleDelete}
                     onSave={handleSave}
