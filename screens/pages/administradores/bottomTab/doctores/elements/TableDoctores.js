@@ -93,19 +93,21 @@ export default function TableDoctores() {
 
     const handleSave = async (item) => {
         try {
-            let body = {
-                "nombres": item.nombres,
-                "apellidos": item.apellidos,
-                "cedula": item.cedula
-            };
+            let body = {};
+
+            // Solo incluir campos que cambiaron
+            if (item.nombres !== dataToEdit.nombres) body.nombres = item.nombres;
+            if (item.apellidos !== dataToEdit.apellidos) body.apellidos = item.apellidos;
+            if (item.cedula !== dataToEdit.cedula) body.cedula = item.cedula;
+            if (item.lugar_trabajo !== dataToEdit.lugar_trabajo) body.lugar_trabajo = item.lugar_trabajo;
 
             // Solo incluir especialidad si se cambió
             if (item.especialidad_select !== undefined && item.especialidad_select !== dataToEdit.id_especialidades) {
                 body.especialidad = item.especialidad_select;
             }
 
-            // Si solo hay campos básicos (sin cambios), no enviar petición
-            if (Object.keys(body).length <= 3) { // Solo nombres, apellidos, cedula
+            // Si no hay cambios, no enviar petición
+            if (Object.keys(body).length === 0) {
                 // No mostrar mensaje de "no changes" porque los horarios pueden haber cambiado
                 // Los horarios se manejan en InfoCard
                 fetchDoctores(); // Refresh data anyway
