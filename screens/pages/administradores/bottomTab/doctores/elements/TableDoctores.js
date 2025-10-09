@@ -68,7 +68,7 @@ export default function TableDoctores() {
     }, [especialidades, horarios]);
 
     const handleView = (item) => {
-        setDataToEdit(item);
+        setDataToEdit({ ...item, especialidad: item.id_especialidades });
         setVisible(true);
     };
 
@@ -172,7 +172,7 @@ export default function TableDoctores() {
                 <InfoCard
                     data={dataToEdit}
                     visible={visible}
-                    hiddenFields={["id", "updated_at", "created_at", "user_id", "horarios_asignados", "id_especialidades", "id_horario", "especialidad_display", "horario"]}
+                    hiddenFields={["id", "updated_at", "created_at", "user_id", "horarios_asignados", "id_especialidades", "id_horario", "especialidad_display", "horario", "especialidad_select", "horarios_asignados_display"]}
                     selectFields={selectFields}
                     availableHorarios={horarios}
                     showHorarios={true}

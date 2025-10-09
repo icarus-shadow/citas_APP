@@ -55,13 +55,29 @@ const InfoCard = ({
         setErrors({});
         // Initialize assigned horarios from data
         if (data?.horarios_asignados && Array.isArray(data.horarios_asignados)) {
-            setAssignedHorarios(data.horarios_asignados);
-            setOriginalHorarios([...data.horarios_asignados]); // Keep track of original state
+            if (data.horarios_asignados.length > 0 && typeof data.horarios_asignados[0] === 'string') {
+                // Map horario names to full objects from availableHorarios
+                const mappedHorarios = data.horarios_asignados
+                    .map(name => availableHorarios.find(h => h.nombre === name))
+                    .filter(Boolean); // Remove any undefined results
+                setAssignedHorarios(mappedHorarios);
+                setOriginalHorarios([...mappedHorarios]); // Keep track of original state
+            } else if (data.horarios_asignados.length > 0 && typeof data.horarios_asignados[0] === 'object' && data.horarios_asignados[0].id && data.horarios_asignados[0].nombre) {
+                // Map partial objects (id and nombre) to full objects from availableHorarios
+                const mappedHorarios = data.horarios_asignados
+                    .map(partial => availableHorarios.find(h => h.id === partial.id))
+                    .filter(Boolean); // Remove any undefined results
+                setAssignedHorarios(mappedHorarios);
+                setOriginalHorarios([...mappedHorarios]); // Keep track of original state
+            } else {
+                setAssignedHorarios(data.horarios_asignados);
+                setOriginalHorarios([...data.horarios_asignados]); // Keep track of original state
+            }
         } else {
             setAssignedHorarios([]);
             setOriginalHorarios([]);
         }
-    }, [data, visible]);
+    }, [data, visible, availableHorarios]);
 
     useEffect(() => {
         if (visible) {
