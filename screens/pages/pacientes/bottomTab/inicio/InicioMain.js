@@ -22,6 +22,9 @@ export default function InicioMain() {
     const { user, token } = useSelector((state) => state.auth);
     isDark ? (col = colors) : (col = darkColors);
 
+    console.log('[Paciente - InicioMain] MisCitasCount component:', typeof MisCitasCount);
+    console.log('[Paciente - InicioMain] ProximasCitasCount component:', typeof ProximasCitasCount);
+    console.log('[Paciente - InicioMain] DoctoresDisponiblesCount component:', typeof DoctoresDisponiblesCount);
     console.log('[Paciente - InicioMain] Renderizando pantalla de inicio del paciente');
     console.log('[Paciente - InicioMain] Auth state - User:', user, 'Token exists:', !!token);
 

@@ -22,10 +22,10 @@ export default function TableHorarios() {
                 // Filter out invalid horarios (those without id or required fields)
                 const validHorarios = response.filter(item => {
                     return item &&
-                             item.id != null &&
-                             item.nombre != null &&
-                             item.hora_inicio != null &&
-                             item.hora_fin != null;
+                              item.id != null &&
+                              item.nombre != null &&
+                              item.hora_inicio != null &&
+                              item.hora_fin != null;
                 });
 
                 // Format dias array for display

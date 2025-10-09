@@ -11,6 +11,7 @@ import PacientesCount from "./elements/PacientesCount";
 import DoctoresCount from "./elements/DoctoresCount";
 import AdministradoresCount from "./elements/AdministradoresCount";
 import EspecialidadesCount from "./elements/EspecialidadesCount";
+import HorariosCount from "./elements/HorariosCount";
 
 let col = colors;
 
@@ -26,6 +27,7 @@ export default function InicioMain() {
                 <DoctoresCount />
                 <AdministradoresCount />
                 <EspecialidadesCount />
+                <HorariosCount />
             </View>
         </ScrollView>
     )

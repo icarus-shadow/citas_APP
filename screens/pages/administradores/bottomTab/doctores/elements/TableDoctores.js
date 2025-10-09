@@ -32,14 +32,20 @@ export default function TableDoctores() {
 
     const fetchDoctores = async () => {
         const response = await ApiService.request('/doctores');
+        console.log('Fetched doctors response:', response);
+        console.log('Horarios state:', horarios);
         const doctoresConEspecialidad = response.map(doctor => {
+            console.log('Processing doctor:', doctor.nombres, 'horarios_asignados:', doctor.horarios_asignados);
             // Convertir horarios_asignados de array de strings a array de objetos {id, nombre}
             const horariosAsignadosArray = doctor.horarios_asignados && doctor.horarios_asignados.length > 0
                 ? doctor.horarios_asignados.map(nombre => {
+                    console.log('Mapping nombre:', nombre);
                     const horario = horarios.find(h => h.nombre === nombre);
+                    console.log('Found horario:', horario);
                     return horario ? { id: horario.id, nombre: horario.nombre } : null;
                 }).filter(h => h !== null)
                 : [];
+            console.log('Mapped horariosAsignadosArray:', horariosAsignadosArray);
 
             return {
                 ...doctor,
