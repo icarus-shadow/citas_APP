@@ -74,7 +74,7 @@ const getEditableFields = (rol) => {
     return [];
 };
 
-export default function PerfilMain() {
+export default function PerfilMain({ onScrollStateChange }) {
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? colors : darkColors;
 
@@ -143,7 +143,16 @@ export default function PerfilMain() {
     }, [])
 
     return (
-        <ScrollView style={styles.container(col)}>
+        <ScrollView
+            style={styles.container(col)}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            onScroll={(e) => {
+                const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+                const isAtEnd = contentOffset.y + layoutMeasurement.height >= contentSize.height - 20;
+                if (onScrollStateChange) onScrollStateChange(isAtEnd);
+            }}
+            scrollEventThrottle={16}
+        >
             <CustomAlert
                 visible={alertVisible}
                 type={alertType}

@@ -19,8 +19,10 @@ export default function SlidingTopScreen({ screens = [] }) {
     const translateY = useRef(new Animated.Value(hiddenPosition)).current;
     const lastY = useRef(hiddenPosition);
     const startY = useRef(0);
+    const startLocationY = useRef(0);
 
     const [activeKey, setActiveKey] = useState(screens[0]?.key || null);
+    const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
 
     useEffect(() => {
         lastY.current = hiddenPosition;
@@ -49,10 +51,14 @@ export default function SlidingTopScreen({ screens = [] }) {
 
     const panResponder = useRef(
         PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
+            onStartShouldSetPanResponder: (evt) => {
+                const { locationY } = evt.nativeEvent;
+                return locationY > overlayHeight * 0.8;
+            },
             onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 5,
-            onPanResponderGrant: () => {
+            onPanResponderGrant: (evt, gestureState) => {
                 startY.current = lastY.current;
+                startLocationY.current = gestureState.y0;
             },
             onPanResponderMove: (_, gesture) => {
                 let newY = startY.current + gesture.dy;
@@ -65,7 +71,7 @@ export default function SlidingTopScreen({ screens = [] }) {
                 const dy = gesture.dy;
                 if (dy > 80 || vy > 0.6) {
                     open();
-                } else if (dy < -80 || vy < -0.6) {
+                } else if ((dy < -80 || vy < -0.6) && (isScrolledToEnd || startLocationY.current > overlayHeight * 0.8)) {
                     close();
                 } else {
                     const midpoint = hiddenPosition / 2;
@@ -98,7 +104,7 @@ export default function SlidingTopScreen({ screens = [] }) {
             <View style={{ flexDirection: "row", width, height: overlayHeight - handleHeight }}>
                 <View style={{ flex: 1 }}>
                     {ActiveComponent ? (
-                        <ActiveComponent navigation={navigation} closeSliding={close} />
+                        <ActiveComponent navigation={navigation} closeSliding={close} onScrollStateChange={setIsScrolledToEnd} />
                     ) : (
                         <View style={styles.empty}>
                             <Text style={{ color: col.text }}>Sin contenido</Text>
