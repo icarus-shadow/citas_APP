@@ -173,7 +173,7 @@ export default function CitasMain() {
                      onPress: async () => {
                          try {
                              console.log('[Paciente - CitasMain] Eliminando cita:', dataToEdit.id);
-                             await ApiService.deleteCita(dataToEdit.id);
+                             await ApiService.deleteCitaPaciente(dataToEdit.id);
                              console.log('[Paciente - CitasMain] Cita eliminada exitosamente');
                              setVisible(false);
                              setRefreshTable(prev => prev + 1); // Actualizar tabla

@@ -215,6 +215,12 @@ class ApiService {
         });
     }
 
+    async deleteCitaPaciente(id) {
+        return await this.request(`/citas/paciente/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
     async getDoctoresPorEspecialidad(id) {
         return await this.request(`/doctores/especialidad/${id}`, { method: 'GET' });
     }
