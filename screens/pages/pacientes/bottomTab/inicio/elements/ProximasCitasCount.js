@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import CountCard from '../../../../../../components/cards/CountCard';
+import Card from '../../../../../../components/cards/Card';
 import ApiService from '../../../../../../Src/services/api/Api';
 
 const ProximasCitasCount = () => {
@@ -20,9 +20,10 @@ const ProximasCitasCount = () => {
     }, []);
 
     return (
-        <CountCard
+        <Card
             title="Próximas Citas"
-            number={count}
+            subtitle={`Total de próximas citas \nen el sistema: `}
+            count={count}
         />
     );
 };

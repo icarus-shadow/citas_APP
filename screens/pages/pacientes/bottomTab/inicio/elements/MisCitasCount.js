@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import CountCard from '../../../../../../components/cards/CountCard';
+import Card from '../../../../../../components/cards/Card';
 import ApiService from '../../../../../../Src/services/api/Api';
 
 const MisCitasCount = () => {
@@ -18,9 +18,10 @@ const MisCitasCount = () => {
     }, []);
 
     return (
-        <CountCard
+        <Card
             title="Mis Citas"
-            number={count}
+            subtitle={`Total de mis citas \nen el sistema: `}
+            count={count}
         />
     );
 };

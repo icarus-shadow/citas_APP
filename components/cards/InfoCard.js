@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, StyleSheet, Animated, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from '@react-native-picker/picker';
 import { useSelector } from "react-redux";
@@ -63,8 +63,6 @@ const InfoCard = ({
         }
         return newFields;
     }, [selectFields, pacienteOptions, doctorOptions]);
-    const fadeAnim = useState(new Animated.Value(0))[0];
-    const slideAnim = useState(new Animated.Value(300))[0];
 
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? colors : darkColors;
@@ -72,8 +70,8 @@ const InfoCard = ({
     useEffect(() => {
         // Initialize values with IDs for select fields
         const initialValues = { ...data };
-        if (data.id_paciente) initialValues.paciente = data.id_paciente;
-        if (data.id_doctor) initialValues.doctor = data.id_doctor;
+        if (data.id_paciente && !data.paciente) initialValues.paciente = data.id_paciente;
+        if (data.id_doctor && !data.doctor) initialValues.doctor = data.id_doctor;
         setValues(initialValues);
         setOriginalValues(initialValues);
         setEditStates({});
@@ -104,36 +102,6 @@ const InfoCard = ({
             setOriginalHorarios([]);
         }
     }, [data, visible]);
-
-    useEffect(() => {
-        if (visible) {
-            Animated.parallel([
-                Animated.timing(fadeAnim, {
-                    toValue: 1,
-                    duration: 300,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(slideAnim, {
-                    toValue: 0,
-                    duration: 300,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-        } else {
-            Animated.parallel([
-                Animated.timing(fadeAnim, {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(slideAnim, {
-                    toValue: 300,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-        }
-    }, [visible, fadeAnim, slideAnim]);
 
     // Filter available horarios (exclude already assigned ones)
     const availableHorariosFiltered = useMemo(() => {
@@ -327,9 +295,9 @@ const InfoCard = ({
     const initials = `${data?.nombres?.[0] || ""}${data?.apellidos?.[0] || ""}`;
 
     return (
-        <Modal visible={visible} animationType="none" transparent>
-            <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
-                <Animated.View style={[styles.modalContainer(col), { transform: [{ translateY: slideAnim }] }]}>
+        <Modal visible={visible} animationType="fade" transparent>
+            <View style={styles.overlay}>
+                <View style={styles.modalContainer(col)}>
                     <View style={styles.header}>
                         <View style={styles.avatarContainer(col)}>
                             <Ionicons name="person-circle" size={60} color={col.text} />
@@ -352,12 +320,16 @@ const InfoCard = ({
                                         <View key={key} style={styles.fieldContainer}>
                                             <Text style={styles.fieldLabel(col)}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
                                             <View style={styles.inputContainer}>
-                                                {isSelect ? (
+                                                {key === 'doctor' && !editStates[key] ? (
+                                                    <Text style={styles.textInput(col, editStates[key])}>
+                                                        {data.doctor ? `${data.doctor.nombres} ${data.doctor.apellidos}` : 'Sin doctor'}
+                                                    </Text>
+                                                ) : isSelect ? (
                                                     editStates[key] ? (
                                                         <View style={styles.pickerContainer(col, editStates[key])}>
                                                             <Picker
                                                                 enabled={!!editStates[key]}
-                                                                selectedValue={values?.[key]?.toString()}
+                                                                selectedValue={(values?.[key] ?? '').toString()}
                                                                 onValueChange={(val) => handleChange(key, val)}
                                                                 style={styles.picker(col, editStates[key])}
                                                                 dropdownIconColor={col.primary}
@@ -374,13 +346,20 @@ const InfoCard = ({
                                                         </View>
                                                     ) : (
                                                         <Text style={styles.textInput(col, editStates[key])}>
-                                                            {isSelect.options?.find(opt => opt.value.toString() === values?.[key]?.toString())?.label || 'No seleccionado'}
+                                                            {isSelect.options?.find(opt => opt.value != null && opt.value.toString() === (values?.[key] ?? '').toString())?.label || 'No seleccionado'}
                                                         </Text>
                                                     )
                                                 ) : (
                                                     <TextInput
                                                         editable={!!editStates[key]}
-                                                        value={values?.[key]?.toString()}
+                                                        value={(() => {
+                                                            const val = values?.[key]?.toString();
+                                                            console.log(`[InfoCard] key: ${key}, value:`, values?.[key], `type: ${typeof values?.[key]}, toString: ${val}`);
+                                                            if (key === 'paciente') {
+                                                                console.log(`[InfoCard] Nombre del paciente mostrado: ${val}`);
+                                                            }
+                                                            return val;
+                                                        })()}
                                                         onChangeText={(val) => handleChange(key, val)}
                                                         style={styles.textInput(col, editStates[key])}
                                                         placeholder={`Ingrese ${key}`}
@@ -388,13 +367,15 @@ const InfoCard = ({
                                                     />
                                                 )}
                                                 {errors[key] && <Text style={styles.errorText(col)}>{errors[key]}</Text>}
-                                                <TouchableOpacity onPress={() => toggleEdit(key)} style={styles.editButton(col)}>
-                                                    <Ionicons
-                                                        name={editStates[key] ? "lock-closed" : "create"}
-                                                        size={20}
-                                                        color={col.primary}
-                                                    />
-                                                </TouchableOpacity>
+                                                {!readOnlyFields.includes(key) && (
+                                                    <TouchableOpacity onPress={() => toggleEdit(key)} style={styles.editButton(col)}>
+                                                        <Ionicons
+                                                            name={editStates[key] ? "lock-closed" : "create"}
+                                                            size={20}
+                                                            color={col.primary}
+                                                        />
+                                                    </TouchableOpacity>
+                                                )}
                                             </View>
                                         </View>
                                     );
@@ -510,15 +491,19 @@ const InfoCard = ({
 
                     <DateSlotSelectorModal
                         visible={showDateSlotModal}
-                        onClose={() => setShowDateSlotModal(false)}
+                        onClose={() => {
+                            setShowDateSlotModal(false);
+                            setSelectedDoctor(null);
+                        }}
                         doctorId={selectedDoctor}
                         onSelectSlot={(date, time) => {
                             handleChange('fecha_cita', date);
                             handleChange('hora_cita', time);
+                            setSelectedDoctor(null);
                         }}
                     />
-                </Animated.View>
-            </Animated.View>
+                </View>
+            </View>
         </Modal>
     );
 };

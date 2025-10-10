@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import CountCard from '../../../../../../components/cards/CountCard';
+import Card from '../../../../../../components/cards/Card';
 import ApiService from '../../../../../../Src/services/api/Api';
 
 const DoctoresDisponiblesCount = () => {
@@ -18,9 +18,10 @@ const DoctoresDisponiblesCount = () => {
     }, []);
 
     return (
-        <CountCard
+        <Card
             title="Doctores Disponibles"
-            number={count}
+            subtitle={`Total de doctores disponibles \nen el sistema: `}
+            count={count}
         />
     );
 };

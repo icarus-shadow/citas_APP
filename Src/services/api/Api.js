@@ -202,6 +202,19 @@ class ApiService {
         });
     }
 
+    async updateCita(id, data) {
+        return await this.request(`/citas/paciente/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    }
+
+    async deleteCita(id) {
+        return await this.request(`/citas/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
     async getDoctoresPorEspecialidad(id) {
         return await this.request(`/doctores/especialidad/${id}`, { method: 'GET' });
     }

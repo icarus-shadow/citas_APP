@@ -25,6 +25,7 @@ export default function CitasMain() {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedSlots, setSelectedSlots] = useState([]);
     const [doctores, setDoctores] = useState([]);
+    const [refreshTable, setRefreshTable] = useState(0);
 
     /**
       * Obtiene el conteo de citas del paciente
@@ -53,9 +54,11 @@ export default function CitasMain() {
          try {
              console.log('[Paciente - CitasMain] Obteniendo lista de doctores...');
              const response = await ApiService.getDoctores();
+             console.log('[Paciente - CitasMain] Respuesta de doctores:', response);
              if (Array.isArray(response)) {
                  setDoctores(response);
                  console.log(`[Paciente - CitasMain] Doctores cargados: ${response.length}`);
+                 response.forEach(d => console.log(`Doctor: ${d.nombres} ${d.apellidos}`));
              } else {
                  console.log('[Paciente - CitasMain] Respuesta no es un array');
                  setDoctores([]);
@@ -67,17 +70,15 @@ export default function CitasMain() {
      };
 
     useEffect(() => {
-        console.log('[Paciente - CitasMain] Inicializando pantalla de citas del paciente');
         fetchCitasCount();
         fetchDoctores();
     }, []);
 
-    // Opciones de doctores memoizadas
-    const doctorOptions = useMemo(() => doctores.map(d => ({ label: `${d.nombres} ${d.apellidos}`, value: d.id })), [doctores]);
+    // Opciones de doctores
+    const doctorOptions = doctores.map(d => ({ label: `${d.nombres} ${d.apellidos}`.trim(), value: d.id }));
 
     // Formulario para agendar cita
     const formFields = useMemo(() => {
-        console.log('[Paciente - CitasMain] Memoizando formFields, doctores length:', doctores.length);
         return [
             {
                 name: 'id_doctor',
@@ -127,10 +128,66 @@ export default function CitasMain() {
        * Cancela el proceso de agendar cita
        */
       const handleCancel = () => {
-          console.log('[Paciente - CitasMain] Cancelando agendamiento de cita');
-          setModalVisible(false);
-          setSelectedSlots([]);
-      };
+         console.log('[Paciente - CitasMain] Cancelando agendamiento de cita');
+         setModalVisible(false);
+         setSelectedSlots([]);
+     };
+
+     /**
+      * Maneja el guardado de cambios en una cita
+      */
+     const handleSaveCita = async (updatedData) => {
+         try {
+             console.log('[Paciente - CitasMain] Guardando cambios en cita:', updatedData);
+             const dataToSend = {
+                 id_doctor: updatedData.doctor,
+                 fecha_cita: updatedData.fecha_cita,
+                 hora_cita: updatedData.hora_cita,
+                 lugar: updatedData.lugar,
+                 motivo: updatedData.motivo || "Sin motivo"
+             };
+             await ApiService.updateCita(dataToEdit.id, dataToSend);
+             console.log('[Paciente - CitasMain] Cita actualizada exitosamente');
+             setVisible(false);
+             setRefreshTable(prev => prev + 1); // Actualizar tabla
+             fetchCitasCount(); // Actualizar conteo
+             Alert.alert("¡Éxito!", "La cita ha sido actualizada correctamente");
+         } catch (error) {
+             console.error('[Paciente - CitasMain] Error actualizando cita:', error);
+             Alert.alert("Error", error.message || "Error al actualizar la cita");
+         }
+     };
+
+     /**
+      * Maneja la eliminación de una cita
+      */
+     const handleDeleteCita = async () => {
+         Alert.alert(
+             "Confirmar Eliminación",
+             "¿Estás seguro de que quieres eliminar esta cita?",
+             [
+                 { text: "Cancelar", style: "cancel" },
+                 {
+                     text: "Eliminar",
+                     style: "destructive",
+                     onPress: async () => {
+                         try {
+                             console.log('[Paciente - CitasMain] Eliminando cita:', dataToEdit.id);
+                             await ApiService.deleteCita(dataToEdit.id);
+                             console.log('[Paciente - CitasMain] Cita eliminada exitosamente');
+                             setVisible(false);
+                             setRefreshTable(prev => prev + 1); // Actualizar tabla
+                             fetchCitasCount(); // Actualizar conteo
+                             Alert.alert("¡Éxito!", "La cita ha sido eliminada correctamente");
+                         } catch (error) {
+                             console.error('[Paciente - CitasMain] Error eliminando cita:', error);
+                             Alert.alert("Error", error.message || "Error al eliminar la cita");
+                         }
+                     }
+                 }
+             ]
+         );
+     };
 
      /**
        * Procesa el envío del formulario de cita
@@ -209,7 +266,7 @@ export default function CitasMain() {
                     </Text>
                 </TouchableOpacity>
 
-                <TableCitasPaciente onView={handleView} />
+                <TableCitasPaciente onView={handleView} refreshTrigger={refreshTable} />
 
                 <DynamicFormModal
                     visible={modalVisible}
@@ -221,9 +278,16 @@ export default function CitasMain() {
 
                 {visible && dataToEdit && (
                     <InfoCard
-                        data={dataToEdit}
+                        data={{
+                            ...dataToEdit,
+                            paciente: dataToEdit.paciente ? `${dataToEdit.paciente.nombres} ${dataToEdit.paciente.apellidos}` : 'Sin paciente'
+                        }}
                         visible={visible}
-                        hiddenFields={["id", "updated_at", "created_at", "user_id", "id_paciente", "id_doctor"]}
+                        hiddenFields={["id", "updated_at", "created_at", "user_id", "id_paciente"]}
+                        readOnlyFields={["paciente"]}
+                        doctorOptions={doctores}
+                        onSave={handleSaveCita}
+                        onDelete={handleDeleteCita}
                         onClose={() => setVisible(false)}
                         title="Detalles de la Cita"
                     />
