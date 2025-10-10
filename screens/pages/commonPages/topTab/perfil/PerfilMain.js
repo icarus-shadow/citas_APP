@@ -11,6 +11,69 @@ import {goToLogin} from "../../../../../Src/services/navigation/NavigationServic
 
 
 
+const PACIENTE_DISPLAY_FIELDS = [
+    { key: 'nombres', label: 'Nombres' },
+    { key: 'apellidos', label: 'Apellidos' },
+    { key: 'cedula', label: 'Documento' },
+    { key: 'telefono', label: 'Teléfono' },
+    { key: 'rh', label: 'RH' },
+    { key: 'fecha_nacimiento', label: 'Fecha de Nacimiento' },
+    { key: 'genero', label: 'Género' },
+    { key: 'edad', label: 'Edad' },
+    { key: 'alergias', label: 'Alergias' },
+    { key: 'comentarios', label: 'Comentarios' },
+];
+
+const DOCTOR_DISPLAY_FIELDS = [
+    { key: 'nombres', label: 'Nombres' },
+    { key: 'apellidos', label: 'Apellidos' },
+    { key: 'cedula', label: 'Cédula' },
+    { key: 'especialidades', label: 'Especialidades' },
+    { key: 'horario', label: 'Horario' },
+    { key: 'lugar_trabajo', label: 'Lugar de Trabajo' },
+];
+
+const ADMIN_DISPLAY_FIELDS = [
+    { key: 'nombres', label: 'Nombres' },
+    { key: 'apellidos', label: 'Apellidos' },
+    { key: 'cedula', label: 'Cédula' },
+    { key: 'telefono', label: 'Teléfono' },
+];
+
+const PACIENTE_EDITABLE_FIELDS = [
+    {name: "nombres", label: "Nombres", type: "text", placeholder: "Ingrese nombres"},
+    {name: "apellidos", label: "Apellidos", type: "text", placeholder: "Ingrese apellidos"},
+    {name: "telefono", label: "Teléfono", type: "text", placeholder: "Ingrese teléfono", keyboard: "phone-pad"},
+    {name: "alergias", label: "Alergias", type: "text", placeholder: "Ingrese alergias"},
+    {name: "comentarios", label: "Comentarios", type: "text", placeholder: "Ingrese comentarios"},
+];
+
+const DOCTOR_EDITABLE_FIELDS = [
+    {name: "nombres", label: "Nombres", type: "text", placeholder: "Ingrese nombres"},
+    {name: "apellidos", label: "Apellidos", type: "text", placeholder: "Ingrese apellidos"},
+];
+
+const ADMIN_EDITABLE_FIELDS = [
+    {name: "nombres", label: "Nombres", type: "text", placeholder: "Ingrese nombres"},
+    {name: "apellidos", label: "Apellidos", type: "text", placeholder: "Ingrese apellidos"},
+    {name: "cedula", label: "Cédula", type: "text", placeholder: "Ingrese cédula"},
+    {name: "telefono", label: "Teléfono", type: "text", placeholder: "Ingrese teléfono", keyboard: "phone-pad"},
+];
+
+const getDisplayFields = (rol) => {
+    if (rol === 1) return PACIENTE_DISPLAY_FIELDS;
+    if (rol === 2) return DOCTOR_DISPLAY_FIELDS;
+    if (rol === 3) return ADMIN_DISPLAY_FIELDS;
+    return [];
+};
+
+const getEditableFields = (rol) => {
+    if (rol === 1) return PACIENTE_EDITABLE_FIELDS;
+    if (rol === 2) return DOCTOR_EDITABLE_FIELDS;
+    if (rol === 3) return ADMIN_EDITABLE_FIELDS;
+    return [];
+};
+
 export default function PerfilMain() {
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? colors : darkColors;
@@ -95,20 +158,12 @@ export default function PerfilMain() {
                     <Text style={styles.title(col)}>Perfil de Usuario</Text>
                     <Text style={styles.label(col)}>Email:</Text>
                     <Text style={styles.text(col)}>{email}</Text>
-                    <Text style={styles.label(col)}>Nombres:</Text>
-                    <Text style={styles.text(col)}>{usuario.nombres}</Text>
-                    <Text style={styles.label(col)}>Apellidos:</Text>
-                    <Text style={styles.text(col)}>{usuario.apellidos}</Text>
-                    <Text style={styles.label(col)}>Documento:</Text>
-                    <Text style={styles.text(col)}>{usuario.cedula}</Text>
-                    <Text style={styles.label(col)}>Teléfono:</Text>
-                    <Text style={styles.text(col)}>{usuario.telefono}</Text>
-                    {usuario.especialidades && (
-                        <>
-                            <Text style={styles.label(col)}>Especialidades:</Text>
-                            <Text style={styles.text(col)}>{usuario.especialidades}</Text>
-                        </>
-                    )}
+                    {getDisplayFields(rol).map(field => (
+                        <React.Fragment key={field.key}>
+                            <Text style={styles.label(col)}>{field.label}:</Text>
+                            <Text style={styles.text(col)}>{usuario[field.key]}</Text>
+                        </React.Fragment>
+                    ))}
                 </View>
             )}
             <View style={styles.buttonContainer}>
@@ -146,19 +201,10 @@ export default function PerfilMain() {
             <DynamicFormModal
                 visible={isEditModalVisible}
                 title="Editar Perfil"
-                fields={[
-                    {name: "nombres", label: "Nombres", type: "text", placeholder: "Ingrese nombres"},
-                    {name: "apellidos", label: "Apellidos", type: "text", placeholder: "Ingrese apellidos"},
-                    {name: "telefono", label: "Teléfono", type: "text", placeholder: "Ingrese teléfono", keyboard: "phone-pad"},
-                    // ...(rol === 2 ? [{
-                    //     name: "especialidades",
-                    //     label: "Especialidades",
-                    //     placeholder: "Ingrese especialidades"
-                    // }] : [])
-                ]}
+                fields={getEditableFields(rol)}
                 initialData={usuario}
                 onCloses={() => setIsEditModalVisible(false)}
-                
+
                 onSubmit={async (data) => {
                     try {
                         console.log(rol);
