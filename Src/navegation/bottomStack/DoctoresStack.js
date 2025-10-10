@@ -1,27 +1,28 @@
 import React from "react";
 import { View } from "react-native";
-import BottomTab from "../../../components/BottomTab";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import CitasMain from "../../../screens/pages/pacientes/bottomTab/citas/CitasMain";
-import DoctoresMain from "../../../screens/pages/pacientes/bottomTab/doctores/DoctoresMain";
-import InicioMain from "../../../screens/pages/pacientes/bottomTab/inicio/InicioMain";
+import InicioMain from "../../../screens/pages/doctores/bottomTab/inicio/InicioMain";
+import CitasMain from "../../../screens/pages/doctores/bottomTab/citas/CitasMain";
+import HorariosMain from "../../../screens/pages/doctores/bottomTab/horarios/HorariosMain";
 import SoporteMain from "../../../screens/pages/commonPages/soporte/SoporteMain";
+import ConfiguracionMain from "../../../screens/pages/commonPages/topTab/configuracion/ConfiguracionMain";
+import PerfilMain from "../../../screens/pages/commonPages/topTab/perfil/PerfilMain";
+import SlidingTopScreen from "../../../components/SlidingTopScreen";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { colors, darkColors } from "../../../utils/desing/Colors";
 import { useSelector } from "react-redux";
 import ScreenWithTab from "../ScreenWithTab";
 
 const Stack = createNativeStackNavigator();
-let col = colors;
 
 export default function DoctoresStack() {
-    const isDark = useSelector((state) => state.boolean.value);
-    isDark ? (col = colors) : (col = darkColors);
+    const isDark = useSelector((state) => state.darkMode.value);
+    const col = isDark ? colors : darkColors;
 
     const tabs = [
         { key: "Inicio", icon: "home", label: "Inicio", route: "Inicio" },
-        { key: "citas", icon: "calendar", label: "citas", route: "Citas" },
-        { key: "doctores", icon: "pulse", label: "doctores", route: "Doctores" },
+        { key: "Citas", icon: "calendar", label: "Citas", route: "Citas" },
+        { key: "Horarios", icon: "time", label: "Horarios", route: "Horarios" },
         { key: "Soporte", icon: "call", label: "Soporte", route: "Soporte" },
     ];
 
@@ -47,10 +48,10 @@ export default function DoctoresStack() {
                             )}
                         />
                         <Stack.Screen
-                            name="Doctores"
+                            name="Horarios"
                             children={() => (
-                                <ScreenWithTab tabs={tabs} initialTab="Doctores">
-                                    <DoctoresMain />
+                                <ScreenWithTab tabs={tabs} initialTab="Horarios">
+                                    <HorariosMain />
                                 </ScreenWithTab>
                             )}
                         />
@@ -63,6 +64,12 @@ export default function DoctoresStack() {
                             )}
                         />
                     </Stack.Navigator>
+                    <SlidingTopScreen
+                        screens={[
+                            { key: "Configuracion", component: ConfiguracionMain, label: "Configuración" },
+                            { key: "Perfil", component: PerfilMain, label: "Perfil" },
+                        ]}
+                    />
                 </View>
             </SafeAreaView>
         </SafeAreaProvider>

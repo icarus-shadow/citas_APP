@@ -282,6 +282,48 @@ class ApiService {
         return await this.request('/countHorarios', { method: 'GET' });
     }
 
+    // Métodos para contadores de doctores
+    async countCitasAsignadas(doctorId) {
+        return await this.request(`/doctor/${doctorId}/count-citas-asignadas`, { method: 'GET' });
+    }
+
+    async countCitasProximas(doctorId) {
+        return await this.request(`/doctor/${doctorId}/count-citas-proximas`, { method: 'GET' });
+    }
+
+    async countPacientesAtendidos(doctorId) {
+        return await this.request(`/doctor/${doctorId}/count-pacientes-atendidos`, { method: 'GET' });
+    }
+
+    /**
+     * Métdo para obtener la lista de administradores de soporte
+     *
+     * Este métdo realiza una petición GET al endpoint '/support-admins' para obtener
+     * la lista de administradores disponibles para soporte al usuario. Esta información
+     * se utiliza en la pantalla de soporte para permitir que los usuarios contacten
+     * a administradores mediante correo electrónico.
+     *
+     * Endpoint: GET /api/support-admins
+     * Autenticación: Requiere token Bearer (automáticamente incluido por this.request)
+     * Respuesta esperada: Array de objetos administrador con propiedades como:
+     * - id: Identificador único del administrador
+     * - nombres: Nombres del administrador
+     * - apellidos: Apellidos del administrador
+     * - email: Correo electrónico para contacto
+     *
+     * @returns {Promise<Array>} Promesa que resuelve con array de administradores
+     * @throws {Error} Error si la petición falla o no hay autenticación
+     */
+    async getSupportAdmins() {
+        // Realizar petición GET al endpoint de administradores de soporte
+        // El métdo this.request automáticamente:
+        // - Incluye el token de autenticación si existe
+        // - Maneja errores de red y autenticación
+        // - Procesa la respuesta JSON
+        // - Registra logs de la petición
+        return await this.request('/support-admins', { method: 'GET' });
+    }
+
     // Méodo de diagnóstico para verificar autenticación
     async checkAuthStatus() {
         try {
