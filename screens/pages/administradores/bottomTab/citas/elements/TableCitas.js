@@ -47,6 +47,14 @@ export default function TableCitas() {
         }));
         setData(citasConNombres);
         setColumns(["fecha_cita", "hora_cita", "lugar", "paciente", "doctor"]);
+
+        const columnLabels = {
+            'fecha_cita': 'Fecha Cita',
+            'hora_cita': 'Hora Cita',
+            'lugar': 'Lugar',
+            'paciente': 'Paciente',
+            'doctor': 'Doctor'
+        };
     };
 
     useEffect(() => {
