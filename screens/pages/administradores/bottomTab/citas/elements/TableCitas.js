@@ -15,36 +15,38 @@ export default function TableCitas() {
     const [selectedSlots, setSelectedSlots] = useState([]);
     const [pacientes, setPacientes] = useState({});
     const [doctores, setDoctores] = useState({});
+    const [pacientesOptions, setPacientesOptions] = useState([]);
+    const [doctoresOptions, setDoctoresOptions] = useState([]);
 
     const fetchPacientes = async () => {
         const response = await ApiService.request('/pacientes');
         const pacientesMap = {};
         response.forEach(pac => {
-            pacientesMap[pac.id] = pac.apellidos;
+            pacientesMap[pac.id] = `${pac.nombres} ${pac.apellidos}`;
         });
         setPacientes(pacientesMap);
+        setPacientesOptions(response);
     };
 
     const fetchDoctores = async () => {
         const response = await ApiService.request('/doctores');
         const doctoresMap = {};
         response.forEach(doc => {
-            doctoresMap[doc.id] = doc.apellidos;
+            doctoresMap[doc.id] = `${doc.nombres} ${doc.apellidos}`;
         });
         setDoctores(doctoresMap);
+        setDoctoresOptions(response);
     };
 
     const fetchCitas = async () => {
-        console.log('[TableCitas] Fetching citas data...');
         const response = await ApiService.request('/citas');
         const citasConNombres = response.map(cita => ({
             ...cita,
-            apellidos_paciente: pacientes[cita.id_paciente] || cita.id_paciente,
-            apellidos_doctor: doctores[cita.id_doctor] || cita.id_doctor
+            paciente: pacientes[cita.id_paciente] || cita.id_paciente,
+            doctor: doctores[cita.id_doctor] || cita.id_doctor
         }));
         setData(citasConNombres);
-        setColumns(["fecha_cita", "hora_cita", "lugar", "apellidos_paciente", "apellidos_doctor"]);
-        console.log('[TableCitas] Citas data updated, count:', citasConNombres.length);
+        setColumns(["fecha_cita", "hora_cita", "lugar", "paciente", "doctor"]);
     };
 
     useEffect(() => {
@@ -87,17 +89,13 @@ export default function TableCitas() {
         const updateCita = async () => {
             try {
                 let body = {
-                    "id_doctor": item.id_doctor,
-                    "id_paciente": item.id_paciente,
+                    "id_doctor": item.doctor,
+                    "id_paciente": item.paciente,
                     "fecha_cita": item.fecha_cita,
                     "hora_cita": item.hora_cita,
                     "lugar": item.lugar,
                     "motivo": " ",
                 };
-                console.log(item);
-                console.log(body);
-
-
                 const response = await ApiService.request(`/citas/${item.id}`, {
                     method: 'PUT',
                     body: JSON.stringify(body)
@@ -124,7 +122,6 @@ export default function TableCitas() {
                 data={data}
                 onView={handleView}
             />
-
             {visible && dataToEdit && (
                 <InfoCard
                     data={dataToEdit}
@@ -133,13 +130,10 @@ export default function TableCitas() {
                     onClose={() => setVisible(false)}
                     onDelete={handleDelete}
                     onSave={handleSave}
+                    pacienteOptions={pacientesOptions}
+                    doctorOptions={doctoresOptions}
                 />
-
             )}
         </View>
     );
 }
-
-
-
-

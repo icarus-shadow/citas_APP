@@ -11,15 +11,22 @@ const DoctoresCount = () => {
     useEffect(() => {
         const fetchDoctoresCount = async () => {
             try {
+                console.log('[DEBUG] DoctoresCount: Iniciando fetchDoctoresCount');
                 const response = await ApiService.countDoctores();
+                console.log('[DEBUG] DoctoresCount: Respuesta de API:', response);
                 if (response.total === undefined) {
-                    console.log(`no hay doctores`);
+                    console.log(`[DEBUG] DoctoresCount: no hay doctores, response.total es undefined`);
                     setDoctoresCount(0);
                 } else {
+                    console.log(`[DEBUG] DoctoresCount: Total doctores:`, response.total);
                     setDoctoresCount(response.total);
                 }
             } catch (error) {
-                console.error('Error fetching doctores count:', error);
+                console.error('[DEBUG] DoctoresCount: Error fetching doctores count:', error);
+                console.error('[DEBUG] DoctoresCount: Error message:', error.message);
+                console.error('[DEBUG] DoctoresCount: Error status:', error.status);
+                // En caso de error, mantener el estado en 0
+                setDoctoresCount(0);
             }
         };
         fetchDoctoresCount();

@@ -104,12 +104,12 @@ export default function TableDoctores() {
             // Solo incluir campos que cambiaron
             if (item.nombres !== dataToEdit.nombres) body.nombres = item.nombres;
             if (item.apellidos !== dataToEdit.apellidos) body.apellidos = item.apellidos;
-            if (item.cedula !== dataToEdit.cedula) body.cedula = item.cedula;
+            if (item.documento !== dataToEdit.cedula) body.cedula = item.documento;
             if (item.lugar_trabajo !== dataToEdit.lugar_trabajo) body.lugar_trabajo = item.lugar_trabajo;
 
             // Solo incluir especialidad si se cambió
-            if (item.especialidad_select !== undefined && item.especialidad_select !== dataToEdit.id_especialidades) {
-                body.especialidad = item.especialidad_select;
+            if (item.especialidad !== undefined && item.especialidad !== dataToEdit.id_especialidades) {
+                body.especialidad = item.especialidad;
             }
 
             // Si no hay cambios, no enviar petición
@@ -182,6 +182,7 @@ export default function TableDoctores() {
                     selectFields={selectFields}
                     availableHorarios={horarios}
                     showHorarios={true}
+                    fieldsToShow={["nombres", "apellidos", "documento", "especialidad"]}
                     onClose={() => setVisible(false)}
                     onDelete={handleDelete}
                     onSave={handleSave}

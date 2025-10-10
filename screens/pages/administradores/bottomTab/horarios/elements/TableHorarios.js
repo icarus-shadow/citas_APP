@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import {View, Alert, ScrollView, TouchableOpacity, Text, StyleSheet} from 'react-native';
+import { useDispatch } from 'react-redux';
 import TableDinamic from "../../../../../../components/TableDinamic";
 import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCard from "../../../../../../components/cards/InfoCard";
 import DynamicFormModal from "../../../../../../components/modals/DynamicFormModal";
 
-export default function TableHorarios() {
-    const [data, setData] = useState([]);
+const TableHorarios = forwardRef(function TableHorarios({ horarios, refreshHorarios }, ref) {
+    useImperativeHandle(ref, () => ({
+        refreshHorarios
+    }));
+    const dispatch = useDispatch();
     const [columns, setColumns] = useState(["nombre", "hora_inicio", "hora_fin", "dias"]);
     const [visible, setVisible] = useState(false);
     const [dataToEdit, setDataToEdit] = useState(null);
@@ -14,43 +18,6 @@ export default function TableHorarios() {
     const [doctors, setDoctors] = useState([]);
     const [selectedHorario, setSelectedHorario] = useState(null);
 
-    const fetchHorarios = async () => {
-        try {
-            const response = await ApiService.request('/horarios');
-
-            if (Array.isArray(response)) {
-                // Filter out invalid horarios (those without id or required fields)
-                const validHorarios = response.filter(item => {
-                    return item &&
-                              item.id != null &&
-                              item.nombre != null &&
-                              item.hora_inicio != null &&
-                              item.hora_fin != null;
-                });
-
-                // Format dias array for display
-                const formattedHorarios = validHorarios.map(horario => ({
-                    ...horario,
-                    dias: Array.isArray(horario.dias) ? horario.dias.map(dia => {
-                        const diasMap = {
-                            1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue',
-                            5: 'Vie', 6: 'Sáb', 7: 'Dom'
-                        };
-                        return diasMap[dia] || dia;
-                    }).join(', ') : horario.dias
-                }));
-
-                setData(formattedHorarios);
-            } else {
-                setData([]);
-            }
-
-            setColumns(["nombre", "hora_inicio", "hora_fin", "dias"]);
-        } catch (error) {
-            console.error('Error fetching horarios:', error);
-            setData([]);
-        }
-    };
 
     const fetchDoctors = async () => {
         try {
@@ -63,7 +30,6 @@ export default function TableHorarios() {
     };
 
     useEffect(() => {
-        fetchHorarios();
         fetchDoctors();
     }, []);
 
@@ -96,7 +62,7 @@ export default function TableHorarios() {
             if (response) {
                 setAssignModalVisible(false);
                 Alert.alert("Éxito", "Horario asignado correctamente al doctor");
-                // Refresh the doctores table if needed
+                refreshHorarios();
             }
         } catch (error) {
             if (error.conflictos && error.conflictos.length > 0) {
@@ -129,7 +95,7 @@ export default function TableHorarios() {
                 });
                 if (response) {
                     Alert.alert("Éxito", "Horario eliminado correctamente");
-                    fetchHorarios();
+                    refreshHorarios();
                 }
             } catch (error) {
                 Alert.alert("Error", error.message || "Error al eliminar horario");
@@ -175,7 +141,7 @@ export default function TableHorarios() {
 
                 if (response) {
                     Alert.alert("Éxito", "Plantilla de horario actualizada correctamente");
-                    fetchHorarios();
+                    refreshHorarios();
                 }
             } catch (error) {
                 Alert.alert("Error", error.message || "Error al actualizar plantilla de horario");
@@ -190,7 +156,7 @@ export default function TableHorarios() {
         <View style={{ flex: 1, padding: 20 }}>
             <TableDinamic
                 columns={columns}
-                data={data}
+                data={horarios}
                 onView={handleView}
                 onAssign={handleAssign}
             />
@@ -199,7 +165,9 @@ export default function TableHorarios() {
                 <InfoCard
                     data={dataToEdit}
                     visible={visible}
+                    fieldsToShow={["nombre", "hora_inicio", "hora_fin", "dias"]}
                     hiddenFields={["id", "updated_at", "created_at", "user_id"]}
+                    readOnlyFields={["id", "created_at", "updated_at"]}
                     onClose={() => setVisible(false)}
                     onDelete={handleDelete}
                     onSave={handleSave}
@@ -227,4 +195,6 @@ export default function TableHorarios() {
             />
         </View>
     );
-}
+});
+
+export default TableHorarios;

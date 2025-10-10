@@ -1,30 +1,21 @@
 import React, { useState, useEffect, memo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
+import { useSelector } from 'react-redux';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ApiService from '../Src/services/api/Api';
 
 const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-function AppointmentSlotSelector({ formData, onSlotsSelected, selectedDoctor: propSelectedDoctor }) {
+function AppointmentSlotSelector({ formData, onSlotsSelected }) {
     console.log('[AppointmentSlotSelector] Re-render triggered');
-    console.log('[AppointmentSlotSelector] Props:', { formData, onSlotsSelected, propSelectedDoctor });
-    const [selectedDoctor, setSelectedDoctor] = useState(null);
+    console.log('[AppointmentSlotSelector] Props:', { formData, onSlotsSelected });
+    const selectedDoctor = formData?.id_doctor;
     const [slots, setSlots] = useState([]);
     const [selectedSlots, setSelectedSlots] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
-
-    // Mantener selectedDoctor estable
-    useEffect(() => {
-        const newDoctor = propSelectedDoctor || formData?.id_doctor;
-        console.log('[AppointmentSlotSelector] Checking selectedDoctor update, newDoctor:', newDoctor, 'current:', selectedDoctor);
-        if (newDoctor && newDoctor !== selectedDoctor) {
-            console.log('[AppointmentSlotSelector] Updating selectedDoctor to:', newDoctor);
-            setSelectedDoctor(newDoctor);
-        }
-    }, [propSelectedDoctor, formData?.id_doctor]);
 
     const fetchSlots = async () => {
         console.log('[AppointmentSlotSelector] fetchSlots called with selectedDoctor:', selectedDoctor, 'selectedDate:', selectedDate);
@@ -203,6 +194,10 @@ function AppointmentSlotSelector({ formData, onSlotsSelected, selectedDoctor: pr
                     Seleccionar Fecha y Horario
                 </Text>
 
+                <Text style={{ fontSize: 14, color: '#666', marginBottom: 20 }}>
+                    Selecciona slots consecutivos disponibles para la fecha seleccionada
+                </Text>
+
                 {/* Selector de Fecha */}
                 <View style={{ marginBottom: 20 }}>
                     <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
@@ -238,10 +233,6 @@ function AppointmentSlotSelector({ formData, onSlotsSelected, selectedDoctor: pr
                     )}
                 </View>
 
-                <Text style={{ fontSize: 14, color: '#666', marginBottom: 20 }}>
-                    Selecciona slots consecutivos disponibles para la fecha seleccionada
-                </Text>
-
                 {slots.length > 0 ? (
                     <View style={{ marginBottom: 20 }}>
                         <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
@@ -276,6 +267,7 @@ function AppointmentSlotSelector({ formData, onSlotsSelected, selectedDoctor: pr
                         No hay horarios disponibles para la fecha seleccionada
                     </Text>
                 )}
+
 
                 {selectedSlots.length > 0 && (
                     <View style={{ marginTop: 20, padding: 10, backgroundColor: '#f0f8ff', borderRadius: 5 }}>

@@ -202,11 +202,14 @@ export default function DynamicFormModal({
                                     </View>
                                 ) : field.type === "custom" ? (
                                     <View>
-                                        {field.component && React.createElement(field.component, {
-                                            ...field.props,
-                                            formData,
-                                            onChange: (name, value) => handleChange(name, value, field)
-                                        })}
+                                        {field.component && (() => {
+                                            const props = typeof field.props === 'function' ? field.props(formData) : field.props;
+                                            return React.createElement(field.component, {
+                                                ...props,
+                                                formData,
+                                                onChange: (name, value) => handleChange(name, value, field)
+                                            });
+                                        })()}
                                     </View>
                                 ) : (
                                     <View style={styles.inputWrapper}>

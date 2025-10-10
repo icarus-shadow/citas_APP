@@ -89,9 +89,9 @@ export default function CitasMain() {
             {
                 type: 'custom',
                 component: AppointmentSlotSelector,
-                props: {
+                props: (formData) => ({
                     onSlotsSelected: setSelectedSlots
-                }
+                })
             },
             {
                 name: 'lugar',
@@ -223,7 +223,7 @@ export default function CitasMain() {
                     <InfoCard
                         data={dataToEdit}
                         visible={visible}
-                        hiddenFields={["id", "updated_at", "created_at", "user_id", "id_paciente"]}
+                        hiddenFields={["id", "updated_at", "created_at", "user_id", "id_paciente", "id_doctor"]}
                         onClose={() => setVisible(false)}
                         title="Detalles de la Cita"
                     />

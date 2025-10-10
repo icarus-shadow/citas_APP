@@ -92,6 +92,7 @@ export default function TablePacientes() {
                         data={dataToEdit}
                         visible={visible}
                         hiddenFields={["id", "updated_at", "created_at", "user_id"]}
+                        fieldsToShow={["nombres", "apellidos", "documento", "rh", "fecha_nacimiento", "genero", "edad", "telefono", "alergias", "comentarios"]}
                         onClose={() => setVisible(false)}
                         onDelete={handleDelete}
                         onSave={handleSave}

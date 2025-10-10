@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, StyleSheet, Animated, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from '@react-native-picker/picker';
 import { useSelector } from "react-redux";
 import { colors, darkColors } from "../../utils/desing/Colors";
 import ApiService from "../../Src/services/api/Api";
+import DateSlotSelectorModal from "../modals/DateSlotSelectorModal";
 
 const InfoCard = ({
     data,
@@ -16,7 +17,10 @@ const InfoCard = ({
     selectFields = {},
     readOnlyFields = [],
     availableHorarios = [],
-    showHorarios = false
+    showHorarios = false,
+    pacienteOptions = [],
+    doctorOptions = [],
+    fieldsToShow = ["lugar", "paciente", "doctor", "fecha_cita", "hora_cita"]
 }) => {
     const [editStates, setEditStates] = useState({});
     const [values, setValues] = useState(data);
@@ -26,7 +30,7 @@ const InfoCard = ({
     const hasChanges = () => {
         // Check if any field values changed
         const fieldChanged = Object.keys(values).some(key => {
-            if (data[key] !== values[key]) return true;
+            if (fieldsToShow.includes(key) && data[key] !== values[key]) return true;
         });
 
         // Check if schedules changed
@@ -41,7 +45,24 @@ const InfoCard = ({
     const [assignedHorarios, setAssignedHorarios] = useState([]);
     const [originalHorarios, setOriginalHorarios] = useState([]);
     const [showHorarioModal, setShowHorarioModal] = useState(false);
-    const [availableHorariosFiltered, setAvailableHorariosFiltered] = useState([]);
+    const [showDateSlotModal, setShowDateSlotModal] = useState(false);
+    const [selectedDoctor, setSelectedDoctor] = useState(null);
+    // const [localSelectFields, setLocalSelectFields] = useState(selectFields);
+    const [originalValues, setOriginalValues] = useState({});
+    const localSelectFields = useMemo(() => {
+        const newFields = { ...selectFields };
+        if (pacienteOptions.length > 0) {
+            newFields.paciente = {
+                options: pacienteOptions.map(p => ({ value: p.id, label: `${p.nombres} ${p.apellidos}` }))
+            };
+        }
+        if (doctorOptions.length > 0) {
+            newFields.doctor = {
+                options: doctorOptions.map(d => ({ value: d.id, label: `${d.nombres} ${d.apellidos}` }))
+            };
+        }
+        return newFields;
+    }, [selectFields, pacienteOptions, doctorOptions]);
     const fadeAnim = useState(new Animated.Value(0))[0];
     const slideAnim = useState(new Animated.Value(300))[0];
 
@@ -49,7 +70,12 @@ const InfoCard = ({
     const col = isDark ? colors : darkColors;
 
     useEffect(() => {
-        setValues(data);
+        // Initialize values with IDs for select fields
+        const initialValues = { ...data };
+        if (data.id_paciente) initialValues.paciente = data.id_paciente;
+        if (data.id_doctor) initialValues.doctor = data.id_doctor;
+        setValues(initialValues);
+        setOriginalValues(initialValues);
         setEditStates({});
         setModified(false);
         setErrors({});
@@ -77,7 +103,7 @@ const InfoCard = ({
             setAssignedHorarios([]);
             setOriginalHorarios([]);
         }
-    }, [data, visible, availableHorarios]);
+    }, [data, visible]);
 
     useEffect(() => {
         if (visible) {
@@ -110,13 +136,14 @@ const InfoCard = ({
     }, [visible, fadeAnim, slideAnim]);
 
     // Filter available horarios (exclude already assigned ones)
-    useEffect(() => {
+    const availableHorariosFiltered = useMemo(() => {
         if (availableHorarios.length > 0) {
             const assignedIds = assignedHorarios.map(h => h.id);
-            const filtered = availableHorarios.filter(h => !assignedIds.includes(h.id));
-            setAvailableHorariosFiltered(filtered);
+            return availableHorarios.filter(h => !assignedIds.includes(h.id));
         }
+        return [];
     }, [availableHorarios, assignedHorarios]);
+
 
     const validateField = (key, value) => {
         const newErrors = { ...errors };
@@ -124,6 +151,15 @@ const InfoCard = ({
             newErrors[key] = 'Email inválido';
         } else if (key === 'telefono' && value && !/^\d{10}$/.test(value)) {
             newErrors[key] = 'Teléfono debe tener 10 dígitos';
+        } else if (key === 'fecha_cita' && value) {
+            const today = new Date().toISOString().split('T')[0];
+            if (value < today) {
+                newErrors[key] = 'La fecha debe ser hoy o futura';
+            } else {
+                delete newErrors[key];
+            }
+        } else if (key === 'hora_cita' && value && !/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value)) {
+            newErrors[key] = 'Hora inválida';
         } else {
             delete newErrors[key];
         }
@@ -140,48 +176,68 @@ const InfoCard = ({
         setValues((prev) => ({ ...prev, [key]: value }));
         setModified(true);
         validateField(key, value);
+        if (key === 'doctor' && value !== originalValues.doctor && fieldsToShow.includes('doctor')) {
+            setSelectedDoctor(value);
+            setShowDateSlotModal(true);
+        }
+    };
+
+    const proceedSave = async () => {
+        try {
+            // Calculate which schedules were added and removed
+            const originalIds = originalHorarios.map(h => h.id);
+            const currentIds = assignedHorarios.map(h => h.id);
+
+            const addedHorarios = assignedHorarios.filter(h => !originalIds.includes(h.id));
+            const removedHorarios = originalHorarios.filter(h => !currentIds.includes(h.id));
+
+            // Unassign removed schedules
+            for (const horario of removedHorarios) {
+                await ApiService.request('/desasignar-horario', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        id_horario: horario.id,
+                        id_doctor: data.id
+                    })
+                });
+            }
+
+            // Assign new schedules (they were already validated when added)
+            for (const horario of addedHorarios) {
+                await ApiService.request('/asignar-horario', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        id_horario: horario.id,
+                        id_doctor: data.id
+                    })
+                });
+            }
+            // Close the modal after successful save
+            onClose();
+            // Refresh data if needed
+            if (onSave) {
+                onSave({ ...values, horarios_asignados: assignedHorarios });
+            }
+        } catch (error) {
+            Alert.alert("Error", "Error al guardar los cambios");
+        }
     };
 
     const handleSave = async () => {
-        const hasErrors = Object.keys(values).some(key => !validateField(key, values[key]));
+        const hasErrors = Object.keys(values).some(key => fieldsToShow.includes(key) && !validateField(key, values[key]));
         if (!hasErrors) {
-            try {
-                // Calculate which schedules were added and removed
-                const originalIds = originalHorarios.map(h => h.id);
-                const currentIds = assignedHorarios.map(h => h.id);
-
-                const addedHorarios = assignedHorarios.filter(h => !originalIds.includes(h.id));
-                const removedHorarios = originalHorarios.filter(h => !currentIds.includes(h.id));
-
-                // Unassign removed schedules
-                for (const horario of removedHorarios) {
-                    await ApiService.request('/desasignar-horario', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            id_horario: horario.id,
-                            id_doctor: data.id
-                        })
-                    });
-                }
-
-                // Assign new schedules (they were already validated when added)
-                for (const horario of addedHorarios) {
-                    await ApiService.request('/asignar-horario', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            id_horario: horario.id,
-                            id_doctor: data.id
-                        })
-                    });
-                }
-                // Close the modal after successful save
-                onClose();
-                // Refresh data if needed
-                if (onSave) {
-                    onSave({ ...values, horarios_asignados: assignedHorarios });
-                }
-            } catch (error) {
-                Alert.alert("Error", "Error al guardar los cambios de horarios");
+            const criticalChange = (fieldsToShow.includes('doctor') && values.doctor !== originalValues.doctor) || (fieldsToShow.includes('fecha_cita') && values.fecha_cita !== originalValues.fecha_cita);
+            if (criticalChange) {
+                Alert.alert(
+                    "Confirmar Cambios",
+                    "Estás cambiando doctor o fecha de la cita. ¿Confirmar?",
+                    [
+                        { text: "Cancelar", style: "cancel" },
+                        { text: "Confirmar", onPress: proceedSave }
+                    ]
+                );
+            } else {
+                await proceedSave();
             }
         }
     };
@@ -288,10 +344,10 @@ const InfoCard = ({
 
                     <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                         <View style={styles.fieldsContainer}>
-                            {Object.keys(data || {})
-                                .filter((key) => !hiddenFields.includes(key))
+                            {fieldsToShow
+                                .filter((key) => !hiddenFields.includes(key) && data.hasOwnProperty(key))
                                 .map((key) => {
-                                    const isSelect = selectFields[key];
+                                    const isSelect = localSelectFields[key];
                                     return (
                                         <View key={key} style={styles.fieldContainer}>
                                             <Text style={styles.fieldLabel(col)}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
@@ -451,6 +507,16 @@ const InfoCard = ({
                             </View>
                         </View>
                     </Modal>
+
+                    <DateSlotSelectorModal
+                        visible={showDateSlotModal}
+                        onClose={() => setShowDateSlotModal(false)}
+                        doctorId={selectedDoctor}
+                        onSelectSlot={(date, time) => {
+                            handleChange('fecha_cita', date);
+                            handleChange('hora_cita', time);
+                        }}
+                    />
                 </Animated.View>
             </Animated.View>
         </Modal>

@@ -3,7 +3,7 @@ import {useSelector} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import Add from "../../../../../components/Buttons/Add";
 import CountCard from "../../../../../components/cards/CountCard";
-import {useEffect, useState} from "react";
+import {useEffect, useState, useRef} from "react";
 import ApiService from "../../../../../Src/services/api/Api";
 import TableHorarios from "./elements/TableHorarios";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
@@ -15,7 +15,9 @@ export default function HorariosMain() {
     const isDark = useSelector((state) => state.darkMode.value);
     isDark ? (col = colors) : (col = darkColors);
 
+    const tableRef = useRef();
     const [horariosCount, setHorariosCount] = useState(0);
+    const [horarios, setHorarios] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const formFields = [
         {name: 'nombre', label: 'Nombre del Horario', type: 'text', required: true},
@@ -51,7 +53,21 @@ export default function HorariosMain() {
             console.error('Error:', error);
         }
     };
+    const fetchHorarios = async () => {
+        try {
+            console.log('[DEBUG] HorariosMain: Iniciando fetchHorarios');
+            const response = await ApiService.request('/horarios');
+            console.log('[DEBUG] HorariosMain: Respuesta de API /horarios:', response);
+            setHorarios(response);
+        } catch (error) {
+            console.error('[DEBUG] HorariosMain: Error fetching horarios:', error);
+            console.error('[DEBUG] HorariosMain: Error message:', error.message);
+            console.error('[DEBUG] HorariosMain: Error status:', error.status);
+            setHorarios([]); // En caso de error, setear array vacío
+        }
+    };
     useEffect(() => {
+        fetchHorarios();
         fetchHorariosCount();
     }, []);
 
@@ -81,6 +97,7 @@ export default function HorariosMain() {
             if (response) {
                 setModalVisible(false);
                 Alert.alert("Éxito", "Plantilla de horario registrada correctamente");
+                tableRef.current.refreshHorarios();
                 fetchHorariosCount();
             }
         } catch (error) {
@@ -97,7 +114,7 @@ export default function HorariosMain() {
                     <Add onPressed={handleNewHorario}/>
                     <CountCard title="Horarios" number={horariosCount} />
                 </View>
-                <TableHorarios />
+                <TableHorarios ref={tableRef} horarios={horarios} refreshHorarios={fetchHorarios} />
                 <DynamicFormModal
                     visible={modalVisible}
                     onCloses={handleCancel}
