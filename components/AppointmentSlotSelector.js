@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Platform, Modal } from 'react-native';
 import { useSelector } from 'react-redux';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ApiService from '../Src/services/api/Api';
@@ -16,6 +16,7 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
     const [error, setError] = useState(null);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showDatePickerModal, setShowDatePickerModal] = useState(false);
 
     const fetchSlots = async () => {
         console.log('[AppointmentSlotSelector] fetchSlots called with selectedDoctor:', selectedDoctor, 'selectedDate:', selectedDate);
@@ -78,12 +79,20 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
 
     const onDateChange = (event, selectedDate) => {
         const currentDate = selectedDate || new Date();
-        setShowDatePicker(Platform.OS === 'ios');
+        if (Platform.OS === 'android') {
+            setShowDatePickerModal(false);
+        } else {
+            setShowDatePicker(Platform.OS === 'ios');
+        }
         setSelectedDate(currentDate);
     };
 
     const showDatepicker = () => {
-        setShowDatePicker(true);
+        if (Platform.OS === 'android') {
+            setShowDatePickerModal(true);
+        } else {
+            setShowDatePicker(true);
+        }
     };
 
     const handleSlotPress = async (slot) => {
@@ -188,7 +197,36 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
     }
 
     return (
-        <ScrollView style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+            {Platform.OS === 'android' && (
+                <Modal
+                    visible={showDatePickerModal}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => setShowDatePickerModal(false)}
+                >
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                        <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
+                            <DateTimePicker
+                                value={selectedDate}
+                                mode="date"
+                                display="default"
+                                onChange={onDateChange}
+                                minimumDate={new Date()} // No permitir fechas pasadas
+                            />
+                        </View>
+                    </View>
+                </Modal>
+            )}
+            {Platform.OS === 'ios' && showDatePicker && (
+                <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display="default"
+                    onChange={onDateChange}
+                    minimumDate={new Date()} // No permitir fechas pasadas
+                />
+            )}
             <View style={{ padding: 10 }}>
                 <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
                     Seleccionar Fecha y Horario
@@ -206,14 +244,14 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
                     <TouchableOpacity
                         style={{
                             borderWidth: 1,
-                            borderColor: '#ccc',
+                            borderColor: '#007bff',
                             borderRadius: 5,
                             padding: 10,
-                            backgroundColor: '#f9f9f9'
+                            backgroundColor: '#007bff'
                         }}
                         onPress={showDatepicker}
                     >
-                        <Text style={{ fontSize: 16 }}>
+                        <Text style={{ fontSize: 16, color: '#fff' }}>
                             {selectedDate.toLocaleDateString('es-ES', {
                                 weekday: 'long',
                                 year: 'numeric',
@@ -222,67 +260,62 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
                             })}
                         </Text>
                     </TouchableOpacity>
-                    {showDatePicker && (
-                        <DateTimePicker
-                            value={selectedDate}
-                            mode="date"
-                            display="default"
-                            onChange={onDateChange}
-                            minimumDate={new Date()} // No permitir fechas pasadas
-                        />
-                    )}
                 </View>
+            </View>
 
-                {slots.length > 0 ? (
-                    <View style={{ marginBottom: 20 }}>
-                        <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
-                            Horarios Disponibles - {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+            <ScrollView style={{ maxHeight: 300 }}>
+                <View style={{ padding: 10 }}>
+                    {slots.length > 0 ? (
+                        <View style={{ marginBottom: 20 }}>
+                            <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
+                                Horarios Disponibles - {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                            </Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                {slots.map(slot => (
+                                    <TouchableOpacity
+                                        key={slot.key}
+                                        style={{
+                                            width: 80,
+                                            height: 40,
+                                            margin: 2,
+                                            borderWidth: 1,
+                                            borderRadius: 5,
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            ...getSlotStyle(slot)
+                                        }}
+                                        onPress={() => handleSlotPress(slot)}
+                                        disabled={!slot.disponible}
+                                    >
+                                        <Text style={{ fontSize: 12, textAlign: 'center' }}>
+                                            {slot.hora_inicio}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+                    ) : (
+                        <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 20 }}>
+                            No hay horarios disponibles para la fecha seleccionada
                         </Text>
-                        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                            {slots.map(slot => (
-                                <TouchableOpacity
-                                    key={slot.key}
-                                    style={{
-                                        width: 80,
-                                        height: 40,
-                                        margin: 2,
-                                        borderWidth: 1,
-                                        borderRadius: 5,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        ...getSlotStyle(slot)
-                                    }}
-                                    onPress={() => handleSlotPress(slot)}
-                                    disabled={!slot.disponible}
-                                >
-                                    <Text style={{ fontSize: 12, textAlign: 'center' }}>
-                                        {slot.hora_inicio}
-                                    </Text>
-                                </TouchableOpacity>
+                    )}
+
+
+                    {selectedSlots.length > 0 && (
+                        <View style={{ marginTop: 20, padding: 10, backgroundColor: '#f0f8ff', borderRadius: 5 }}>
+                            <Text style={{ fontSize: 16, fontWeight: 'bold' }}>
+                                Slots Seleccionados: {selectedSlots.length}
+                            </Text>
+                            {selectedSlots.map(slot => (
+                                <Text key={slot.key} style={{ fontSize: 14 }}>
+                                    {new Date(slot.fecha).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' })} {slot.hora_inicio} - {slot.hora_fin}
+                                </Text>
                             ))}
                         </View>
-                    </View>
-                ) : (
-                    <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 20 }}>
-                        No hay horarios disponibles para la fecha seleccionada
-                    </Text>
-                )}
-
-
-                {selectedSlots.length > 0 && (
-                    <View style={{ marginTop: 20, padding: 10, backgroundColor: '#f0f8ff', borderRadius: 5 }}>
-                        <Text style={{ fontSize: 16, fontWeight: 'bold' }}>
-                            Slots Seleccionados: {selectedSlots.length}
-                        </Text>
-                        {selectedSlots.map(slot => (
-                            <Text key={slot.key} style={{ fontSize: 14 }}>
-                                {new Date(slot.fecha).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' })} {slot.hora_inicio} - {slot.hora_fin}
-                            </Text>
-                        ))}
-                    </View>
-                )}
-            </View>
-        </ScrollView>
+                    )}
+                </View>
+            </ScrollView>
+        </View>
     );
 }
 

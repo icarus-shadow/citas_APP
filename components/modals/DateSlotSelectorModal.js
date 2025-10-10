@@ -50,55 +50,7 @@ const DateSlotSelectorModal = ({ visible, onClose, doctorId, onSelectSlot }) => 
     };
 
     return (
-        <Modal visible={visible} animationType="slide" transparent>
-            <View style={styles.overlay}>
-                <View style={[styles.modalContainer, { backgroundColor: col.background }]}>
-                    <View style={styles.header}>
-                        <Text style={[styles.title, { color: col.text }]}>Seleccionar Fecha y Hora</Text>
-                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <Ionicons name="close" size={24} color={col.text} />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.dateSelectorContainer}>
-                        <Text style={[styles.subtitle, { color: col.text }]}>Seleccionar Fecha</Text>
-                        <TouchableOpacity onPress={() => setDatePickerVisible(true)} style={[styles.dateButton, { backgroundColor: col.backgroundResalt }]}>
-                            <Text style={[styles.dateButtonText, { color: col.text }]}>
-                                {selectedDate ? `Fecha seleccionada: ${selectedDate}` : 'Seleccionar fecha'}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {selectedDate && (
-                        <View style={styles.slotsContainer}>
-                            <Text style={[styles.subtitle, { color: col.text }]}>
-                                Slots disponibles para {selectedDate}
-                            </Text>
-                            {loading ? (
-                                <Text style={[styles.loadingText, { color: col.textResalt }]}>Cargando...</Text>
-                            ) : availableSlots.length > 0 ? (
-                                <ScrollView style={styles.slotsList}>
-                                    {availableSlots.map((slot, index) => (
-                                        <TouchableOpacity
-                                            key={index}
-                                            style={[styles.slotItem, { backgroundColor: col.backgroundResalt }]}
-                                            onPress={() => handleSlotSelect(slot)}
-                                        >
-                                            <Text style={[styles.slotText, { color: col.text }]}>
-                                                {slot.hora_inicio} - {slot.hora_fin}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-                            ) : (
-                                <Text style={[styles.noSlotsText, { color: col.textResalt }]}>
-                                    No hay slots disponibles para esta fecha
-                                </Text>
-                            )}
-                        </View>
-                    )}
-                </View>
-            </View>
+        <View style={{ flex: 1 }}>
             {datePickerVisible && (
                 <DateTimePicker
                     mode="date"
@@ -107,7 +59,57 @@ const DateSlotSelectorModal = ({ visible, onClose, doctorId, onSelectSlot }) => 
                     minimumDate={new Date()}
                 />
             )}
-        </Modal>
+            <Modal visible={visible} animationType="slide" transparent>
+                <View style={styles.overlay}>
+                    <View style={[styles.modalContainer, { backgroundColor: col.background }]}>
+                        <View style={styles.header}>
+                            <Text style={[styles.title, { color: col.text }]}>Seleccionar Fecha y Hora</Text>
+                            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                                <Ionicons name="close" size={24} color={col.text} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.dateSelectorContainer}>
+                            <Text style={[styles.subtitle, { color: col.text }]}>Seleccionar Fecha</Text>
+                            <TouchableOpacity onPress={() => setDatePickerVisible(true)} style={[styles.dateButton, { backgroundColor: col.backgroundResalt }]}>
+                                <Text style={[styles.dateButtonText, { color: col.text }]}>
+                                    {selectedDate ? `Fecha seleccionada: ${selectedDate}` : 'Seleccionar fecha'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {selectedDate && (
+                            <View style={styles.slotsContainer}>
+                                <Text style={[styles.subtitle, { color: col.text }]}>
+                                    Slots disponibles para {selectedDate}
+                                </Text>
+                                {loading ? (
+                                    <Text style={[styles.loadingText, { color: col.textResalt }]}>Cargando...</Text>
+                                ) : availableSlots.length > 0 ? (
+                                    <ScrollView style={styles.slotsList}>
+                                        {availableSlots.map((slot, index) => (
+                                            <TouchableOpacity
+                                                key={index}
+                                                style={[styles.slotItem, { backgroundColor: col.backgroundResalt }]}
+                                                onPress={() => handleSlotSelect(slot)}
+                                            >
+                                                <Text style={[styles.slotText, { color: col.text }]}>
+                                                    {slot.hora_inicio} - {slot.hora_fin}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
+                                ) : (
+                                    <Text style={[styles.noSlotsText, { color: col.textResalt }]}>
+                                        No hay slots disponibles para esta fecha
+                                    </Text>
+                                )}
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </Modal>
+        </View>
     );
 };
 

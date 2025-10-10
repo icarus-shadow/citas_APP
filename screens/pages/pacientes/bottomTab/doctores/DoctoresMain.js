@@ -1,14 +1,67 @@
-import {View, Text, StyleSheet, Alert, ScrollView} from 'react-native';
+import React from 'react';
+import {View, Text, StyleSheet, Alert, FlatList, TextInput} from 'react-native';
+import {Picker} from '@react-native-picker/picker';
 import {useSelector} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import CountCard from "../../../../../components/cards/CountCard";
-import {useEffect, useState} from "react";
+import {useEffect, useState, useMemo} from "react";
 import ApiService from "../../../../../Src/services/api/Api";
-import TableDoctoresPaciente from "./elements/TableDoctoresPaciente";
-import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
-import AppointmentSlotSelector from "../../../../../components/AppointmentSlotSelector";
+import DoctorCard from "../../../../../components/cards/DoctorCard";
+import AppointmentSlotModal from "./elements/AppointmentSlotModal";
 
 let col = colors;
+
+/**
+ * Componente memoizado para los controles de filtro
+ * Evita re-renders innecesarios del FlatList
+ */
+const FilterHeader = React.memo(({ filters, setFilters, uniqueEspecialidades, col, doctoresCount }) => {
+    console.log('[FilterHeader] render');
+    return (
+        <View style={{paddingTop: 20}}>
+            <View style={{marginBottom: 10}}>
+                <TextInput
+                    placeholder="Buscar por nombre"
+                    value={filters.nombre}
+                    onChangeText={(text) => {
+                        console.log('[FilterHeader] onChangeText:', text);
+                        setFilters(prev => ({...prev, nombre: text}));
+                    }}
+                    style={{
+                        borderWidth: 1,
+                        borderColor: col.text,
+                        color: col.text,
+                        padding: 10,
+                        marginBottom: 10,
+                        borderRadius: 5
+                    }}
+                />
+                <Picker
+                    selectedValue={filters.especialidad}
+                    onValueChange={(itemValue) => setFilters(prev => ({...prev, especialidad: itemValue}))}
+                    style={{color: col.text, backgroundColor: col.background}}
+                >
+                    <Picker.Item label="Todas" value="" />
+                    {uniqueEspecialidades.map(esp => <Picker.Item key={esp} label={esp} value={esp} />)}
+                </Picker>
+            </View>
+            <View style={styles.container(col)}>
+                <CountCard title="Doctores Disponibles" number={doctoresCount} />
+            </View>
+
+            <Text style={{
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: col.text,
+                textAlign: 'center',
+                marginVertical: 15,
+                paddingHorizontal: 20
+            }}>
+                Selecciona un doctor para agendar tu cita
+            </Text>
+        </View>
+    );
+});
 
 /**
  * Pantalla de Doctores para Pacientes
@@ -16,65 +69,31 @@ let col = colors;
  */
 export default function DoctoresMain() {
     const isDark = useSelector((state) => state.darkMode.value);
+    const user = useSelector((state) => state.auth.user);
     isDark ? (col = colors) : (col = darkColors);
 
     const [doctoresCount, setDoctoresCount] = useState(0);
-    const [modalVisible, setModalVisible] = useState(false);
+    const [slotModalVisible, setSlotModalVisible] = useState(false);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
-    const [especialidades, setEspecialidades] = useState([]);
-    const [selectedSlots, setSelectedSlots] = useState([]);
+    const [doctores, setDoctores] = useState([]);
+    const [especialidadesMap, setEspecialidadesMap] = useState({});
+    const [filters, setFilters] = useState({ nombre: '', especialidad: '' });
+    const [uniqueEspecialidades, setUniqueEspecialidades] = useState([]);
 
-    // Formulario para agendar cita
-    const formFields = [
-        {
-            name: 'fecha_cita',
-            label: 'Fecha de Cita',
-            type: 'date',
-            required: true,
-            min: new Date().toISOString().split('T')[0]
-        },
-        {
-            type: 'custom',
-            component: AppointmentSlotSelector,
-            props: {
-                selectedDoctor: selectedDoctor?.id,
-                onSlotsSelected: setSelectedSlots
-            }
-        },
-        {
-            name: 'lugar',
-            label: 'Lugar',
-            type: 'text',
-            required: true,
-            placeholder: 'Consultorio 101'
-        },
-        {
-            name: 'motivo',
-            label: 'Motivo de la Consulta',
-            type: 'textarea',
-            required: true,
-            placeholder: 'Describa brevemente el motivo de su consulta'
+    const filteredDoctores = useMemo(() => {
+        let filtered = doctores;
+        if (filters.nombre) {
+            const search = filters.nombre.toLowerCase();
+            filtered = filtered.filter(d =>
+                d.nombres.toLowerCase().includes(search) || d.apellidos.toLowerCase().includes(search)
+            );
         }
-    ];
+        if (filters.especialidad && filters.especialidad !== 'Todas') {
+            filtered = filtered.filter(d => d.especialidad === filters.especialidad);
+        }
+        return filtered;
+    }, [doctores, filters]);
 
-    /**
-     * Obtiene el conteo total de doctores disponibles
-     */
-    const fetchDoctoresCount = async () => {
-        try {
-            console.log('[Paciente - DoctoresMain] Obteniendo lista de doctores...');
-            const response = await ApiService.getDoctores();
-            if (Array.isArray(response)) {
-                setDoctoresCount(response.length);
-                console.log(`[Paciente - DoctoresMain] Total de doctores: ${response.length}`);
-            } else {
-                console.log('[Paciente - DoctoresMain] Respuesta no es un array');
-                setDoctoresCount(0);
-            }
-        } catch (error) {
-            console.error('[Paciente - DoctoresMain] Error obteniendo lista de doctores:', error);
-        }
-    };
 
     /**
      * Obtiene la lista de especialidades para filtrar doctores
@@ -83,18 +102,57 @@ export default function DoctoresMain() {
         try {
             console.log('[Paciente - DoctoresMain] Obteniendo especialidades...');
             const response = await ApiService.request('/especialidades');
-            setEspecialidades(response);
+            const map = {};
+            response.forEach(esp => {
+                map[esp.id] = esp.nombre;
+            });
+            setEspecialidadesMap(map);
             console.log('[Paciente - DoctoresMain] Especialidades cargadas:', response);
         } catch (error) {
             console.error('[Paciente - DoctoresMain] Error obteniendo especialidades:', error);
         }
     };
 
+    /**
+     * Obtiene la lista de doctores y los enriquece con nombres de especialidades
+     */
+    const fetchDoctores = async () => {
+        try {
+            console.log('[Paciente - DoctoresMain] Obteniendo lista de doctores...');
+            const response = await ApiService.getDoctores();
+            if (Array.isArray(response)) {
+                const enriched = response.map(doctor => ({
+                    ...doctor,
+                    especialidad: especialidadesMap[doctor.id_especialidades] || doctor.id_especialidades
+                }));
+                setDoctores(enriched);
+                const uniqueEsp = [...new Set(enriched.map(d => d.especialidad))];
+                setUniqueEspecialidades(uniqueEsp);
+                console.log(`[Paciente - DoctoresMain] Total de doctores: ${response.length}`);
+            } else {
+                console.log('[Paciente - DoctoresMain] Respuesta no es un array');
+                setDoctores([]);
+                setDoctoresCount(0);
+            }
+        } catch (error) {
+            console.error('[Paciente - DoctoresMain] Error obteniendo lista de doctores:', error);
+            setDoctores([]);
+            setDoctoresCount(0);
+        }
+    };
+
+
     useEffect(() => {
         console.log('[Paciente - DoctoresMain] Inicializando pantalla de doctores');
-        fetchDoctoresCount();
         fetchEspecialidades();
     }, []);
+
+    useEffect(() => {
+        if (Object.keys(especialidadesMap).length > 0) {
+            fetchDoctores();
+        }
+    }, [especialidadesMap]);
+
 
     /**
      * Maneja la selección de un doctor para agendar cita
@@ -102,102 +160,44 @@ export default function DoctoresMain() {
     const handleAgendarCita = (doctor) => {
         console.log('[Paciente - DoctoresMain] Agendando cita con doctor:', doctor);
         setSelectedDoctor(doctor);
-        setModalVisible(true);
+        setSlotModalVisible(true);
     };
 
     /**
-      * Cancela el proceso de agendar cita
-      */
-     const handleCancel = () => {
-         console.log('[Paciente - DoctoresMain] Cancelando agendamiento de cita');
-         setModalVisible(false);
-         setSelectedDoctor(null);
-         setSelectedSlots([]);
-     };
+       * Cancela el proceso de agendar cita
+       */
+      const handleCancel = () => {
+           console.log('[Paciente - DoctoresMain] Cancelando agendamiento de cita');
+           setSlotModalVisible(false);
+           setSelectedDoctor(null);
+       };
 
-    /**
-      * Procesa el envío del formulario de cita
-      */
-     const handleSubmit = async (formData) => {
-         try {
-             console.log('[Paciente - DoctoresMain] Enviando formulario de cita:', formData);
-
-             // Validaciones
-             if (!formData.fecha_cita) {
-                 Alert.alert("Error", "Debe seleccionar una fecha para la cita");
-                 return;
-             }
-
-             if (selectedSlots.length === 0) {
-                 Alert.alert("Error", "Debe seleccionar al menos un slot de horario");
-                 return;
-             }
-
-             // Validar que los slots correspondan al día de la semana de la fecha
-             const selectedDate = new Date(formData.fecha_cita + 'T00:00:00');
-             const dayOfWeek = selectedDate.getDay();
-             if (selectedSlots.some(slot => slot.dia !== dayOfWeek)) {
-                 Alert.alert("Error", "Los slots seleccionados no corresponden al día de la semana de la fecha elegida");
-                 return;
-             }
-
-             // Usar la hora del primer slot seleccionado
-             const hora_cita = selectedSlots[0].hora_inicio;
-
-             const citaData = {
-                 id_doctor: selectedDoctor.id,
-                 fecha_cita: formData.fecha_cita,
-                 hora_cita: hora_cita,
-                 lugar: formData.lugar,
-                 motivo: formData.motivo
-             };
-
-             console.log('[Paciente - DoctoresMain] Datos de cita a enviar:', citaData);
-
-             const response = await ApiService.createCita(citaData);
-
-             if (response) {
-                 console.log('[Paciente - DoctoresMain] Cita agendada exitosamente');
-                 setModalVisible(false);
-                 setSelectedDoctor(null);
-                 setSelectedSlots([]);
-                 Alert.alert("¡Éxito!", "Su cita ha sido agendada correctamente");
-             }
-         } catch (error) {
-             console.error('[Paciente - DoctoresMain] Error agendando cita:', error);
-             Alert.alert("Error", error.message || "Error al agendar la cita");
-         }
-     };
 
     return (
-        <ScrollView contentContainerStyle={{flexGrow: 1,paddingBottom: "30%", paddingTop:"15%", backgroundColor: col.background}}>
-            <View style={{ flex: 1, backgroundColor: col.background}}>
-                <View style={styles.container(col)}>
-                    <CountCard title="Doctores Disponibles" number={doctoresCount} />
-                </View>
+        <View style={{ flex: 1, backgroundColor: col.background }}>
+            <FlatList
+                data={filteredDoctores}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => <DoctorCard doctor={item} onAgendarCita={handleAgendarCita} />}
+                ListHeaderComponent={<FilterHeader filters={filters} setFilters={setFilters} uniqueEspecialidades={uniqueEspecialidades} col={col} doctoresCount={filteredDoctores.length} />}
+                contentContainerStyle={{
+                    paddingBottom: "30%",
+                    paddingTop: "15%",
+                    paddingHorizontal: 20,
+                    backgroundColor: col.background
+                }}
+            />
 
-                <Text style={{
-                    fontSize: 18,
-                    fontWeight: 'bold',
-                    color: col.text,
-                    textAlign: 'center',
-                    marginVertical: 15,
-                    paddingHorizontal: 20
-                }}>
-                    Selecciona un doctor para agendar tu cita
-                </Text>
-
-                <TableDoctoresPaciente onAgendarCita={handleAgendarCita} />
-
-                <DynamicFormModal
-                    visible={modalVisible}
-                    onCloses={handleCancel}
-                    onSubmit={handleSubmit}
-                    fields={formFields}
-                    title={`Agendar Cita con Dr. ${selectedDoctor ? `${selectedDoctor.nombres} ${selectedDoctor.apellidos}` : ''}`}
-                />
-            </View>
-        </ScrollView>
+            <AppointmentSlotModal
+                visible={slotModalVisible}
+                onClose={handleCancel}
+                selectedDoctor={selectedDoctor}
+                onSubmit={() => {
+                    setSlotModalVisible(false);
+                    setSelectedDoctor(null);
+                }}
+            />
+        </View>
     )
 }
 
