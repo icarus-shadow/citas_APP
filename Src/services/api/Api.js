@@ -210,6 +210,34 @@ class ApiService {
         return await this.request(`/doctor/${id}/disponibilidad`, { method: 'GET' });
     }
 
+    async getHorariosByDoctor(id_doctor) {
+        return await this.request(`/horarios/listByDoctor/${id_doctor}`, { method: 'GET' });
+    }
+
+    async getCitasByDoctor(id_doctor) {
+        return await this.request(`/citas/doctor/${id_doctor}`, { method: 'GET' });
+    }
+
+    // Nuevos métodos para slots de citas
+    async getAvailableSlots(doctorId, startDate, endDate) {
+        const params = new URLSearchParams({
+            startDate: startDate,
+            endDate: endDate
+        });
+        return await this.request(`/doctores/${doctorId}/slots?${params}`, { method: 'GET' });
+    }
+
+    async validateSlot(doctorId, fecha, hora) {
+        return await this.request(`/doctores/${doctorId}/validate-slot`, {
+            method: 'POST',
+            body: JSON.stringify({ fecha, hora }),
+        });
+    }
+
+    async getAssignedSchedules(doctorId) {
+        return await this.request(`/doctores/${doctorId}/schedules`, { method: 'GET' });
+    }
+
     // Métodos para administradores
     async countCitas() {
         return await this.request('/countCitas', { method: 'GET' });

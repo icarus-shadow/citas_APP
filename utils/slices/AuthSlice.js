@@ -130,13 +130,16 @@ const authSlice = createSlice({
     extraReducers: (builder) => {
         builder
             // checkAuthState
-            .addCase(checkAuthState.pending, (state) => { state.isLoading = true; })
+            .addCase(checkAuthState.pending, (state) => {
+                state.isLoading = true;
+                console.log('[AuthSlice] checkAuthState pending');
+            })
             .addCase(checkAuthState.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.user = action.payload?.user || null;
                 state.token = action.payload?.token || null;
                 state.error = null;
-                console.log('[AuthSlice] checkAuthState fulfilled — token:', !!state.token);
+                console.log('[AuthSlice] checkAuthState fulfilled — token:', !!state.token, 'user:', !!state.user);
             })
             .addCase(checkAuthState.rejected, (state, action) => {
                 state.isLoading = false;
@@ -147,13 +150,16 @@ const authSlice = createSlice({
             })
 
             // login
-            .addCase(login.pending, (state) => { state.isLoading = true; })
+            .addCase(login.pending, (state) => {
+                state.isLoading = true;
+                console.log('[AuthSlice] login pending');
+            })
             .addCase(login.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.user = action.payload?.user || null;
                 state.token = action.payload?.token || null;
                 state.error = null;
-                console.log('[AuthSlice] login fulfilled — user:', !!state.user);
+                console.log('[AuthSlice] login fulfilled — user:', !!state.user, 'token:', !!state.token);
             })
             .addCase(login.rejected, (state, action) => {
                 state.isLoading = false;
@@ -164,13 +170,14 @@ const authSlice = createSlice({
             // register
             .addCase(register.pending, (state) => {
                 state.isLoading = true;
+                console.log('[AuthSlice] register pending');
             })
             .addCase(register.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.user = action.payload?.user || null;
                 state.token = action.payload?.token || null;
                 state.error = null;
-                console.log('[AuthSlice] register fulfilled — user:', !!state.user);
+                console.log('[AuthSlice] register fulfilled — user:', !!state.user, 'token:', !!state.token);
             })
             .addCase(register.rejected, (state, action) => {
                 state.isLoading = false;

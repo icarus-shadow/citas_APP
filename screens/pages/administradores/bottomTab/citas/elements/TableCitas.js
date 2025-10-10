@@ -3,12 +3,16 @@ import {View, Alert, ScrollView} from 'react-native';
 import TableDinamic from "../../../../../../components/TableDinamic";
 import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCard from "../../../../../../components/cards/InfoCard";
+import DynamicFormModal from "../../../../../../components/modals/DynamicFormModal";
+import AppointmentSlotSelector from "../../../../../../components/AppointmentSlotSelector";
 
 export default function TableCitas() {
     const [data, setData] = useState([]);
     const [columns, setColumns] = useState([]);
     const [visible, setVisible] = useState(false);
     const [dataToEdit, setDataToEdit] = useState(null);
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [selectedSlots, setSelectedSlots] = useState([]);
     const [pacientes, setPacientes] = useState({});
     const [doctores, setDoctores] = useState({});
 
@@ -31,6 +35,7 @@ export default function TableCitas() {
     };
 
     const fetchCitas = async () => {
+        console.log('[TableCitas] Fetching citas data...');
         const response = await ApiService.request('/citas');
         const citasConNombres = response.map(cita => ({
             ...cita,
@@ -39,6 +44,7 @@ export default function TableCitas() {
         }));
         setData(citasConNombres);
         setColumns(["fecha_cita", "hora_cita", "lugar", "apellidos_paciente", "apellidos_doctor"]);
+        console.log('[TableCitas] Citas data updated, count:', citasConNombres.length);
     };
 
     useEffect(() => {
@@ -133,3 +139,7 @@ export default function TableCitas() {
         </View>
     );
 }
+
+
+
+

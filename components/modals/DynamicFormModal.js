@@ -29,6 +29,7 @@ export default function DynamicFormModal({
     const col = isDark ? colors : darkColors;
 
     useEffect(() => {
+        console.log('[DynamicFormModal] Resetting formData due to fields change');
         setFormData(initialState);
     }, [fields]);
 
@@ -198,6 +199,14 @@ export default function DynamicFormModal({
                                                 })}
                                             </View>
                                         )}
+                                    </View>
+                                ) : field.type === "custom" ? (
+                                    <View>
+                                        {field.component && React.createElement(field.component, {
+                                            ...field.props,
+                                            formData,
+                                            onChange: (name, value) => handleChange(name, value, field)
+                                        })}
                                     </View>
                                 ) : (
                                     <View style={styles.inputWrapper}>

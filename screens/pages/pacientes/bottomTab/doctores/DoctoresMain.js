@@ -6,6 +6,7 @@ import {useEffect, useState} from "react";
 import ApiService from "../../../../../Src/services/api/Api";
 import TableDoctoresPaciente from "./elements/TableDoctoresPaciente";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
+import AppointmentSlotSelector from "../../../../../components/AppointmentSlotSelector";
 
 let col = colors;
 
@@ -21,6 +22,7 @@ export default function DoctoresMain() {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
     const [especialidades, setEspecialidades] = useState([]);
+    const [selectedSlots, setSelectedSlots] = useState([]);
 
     // Formulario para agendar cita
     const formFields = [
@@ -32,10 +34,12 @@ export default function DoctoresMain() {
             min: new Date().toISOString().split('T')[0]
         },
         {
-            name: 'hora_cita',
-            label: 'Hora de Cita',
-            type: 'time',
-            required: true
+            type: 'custom',
+            component: AppointmentSlotSelector,
+            props: {
+                selectedDoctor: selectedDoctor?.id,
+                onSlotsSelected: setSelectedSlots
+            }
         },
         {
             name: 'lugar',
@@ -102,44 +106,68 @@ export default function DoctoresMain() {
     };
 
     /**
-     * Cancela el proceso de agendar cita
-     */
-    const handleCancel = () => {
-        console.log('[Paciente - DoctoresMain] Cancelando agendamiento de cita');
-        setModalVisible(false);
-        setSelectedDoctor(null);
-    };
+      * Cancela el proceso de agendar cita
+      */
+     const handleCancel = () => {
+         console.log('[Paciente - DoctoresMain] Cancelando agendamiento de cita');
+         setModalVisible(false);
+         setSelectedDoctor(null);
+         setSelectedSlots([]);
+     };
 
     /**
-     * Procesa el envío del formulario de cita
-     */
-    const handleSubmit = async (formData) => {
-        try {
-            console.log('[Paciente - DoctoresMain] Enviando formulario de cita:', formData);
+      * Procesa el envío del formulario de cita
+      */
+     const handleSubmit = async (formData) => {
+         try {
+             console.log('[Paciente - DoctoresMain] Enviando formulario de cita:', formData);
 
-            const citaData = {
-                id_doctor: selectedDoctor.id,
-                fecha_cita: formData.fecha_cita,
-                hora_cita: formData.hora_cita,
-                lugar: formData.lugar,
-                motivo: formData.motivo
-            };
+             // Validaciones
+             if (!formData.fecha_cita) {
+                 Alert.alert("Error", "Debe seleccionar una fecha para la cita");
+                 return;
+             }
 
-            console.log('[Paciente - DoctoresMain] Datos de cita a enviar:', citaData);
+             if (selectedSlots.length === 0) {
+                 Alert.alert("Error", "Debe seleccionar al menos un slot de horario");
+                 return;
+             }
 
-            const response = await ApiService.createCita(citaData);
+             // Validar que los slots correspondan al día de la semana de la fecha
+             const selectedDate = new Date(formData.fecha_cita + 'T00:00:00');
+             const dayOfWeek = selectedDate.getDay();
+             if (selectedSlots.some(slot => slot.dia !== dayOfWeek)) {
+                 Alert.alert("Error", "Los slots seleccionados no corresponden al día de la semana de la fecha elegida");
+                 return;
+             }
 
-            if (response) {
-                console.log('[Paciente - DoctoresMain] Cita agendada exitosamente');
-                setModalVisible(false);
-                setSelectedDoctor(null);
-                Alert.alert("¡Éxito!", "Su cita ha sido agendada correctamente");
-            }
-        } catch (error) {
-            console.error('[Paciente - DoctoresMain] Error agendando cita:', error);
-            Alert.alert("Error", error.message || "Error al agendar la cita");
-        }
-    };
+             // Usar la hora del primer slot seleccionado
+             const hora_cita = selectedSlots[0].hora_inicio;
+
+             const citaData = {
+                 id_doctor: selectedDoctor.id,
+                 fecha_cita: formData.fecha_cita,
+                 hora_cita: hora_cita,
+                 lugar: formData.lugar,
+                 motivo: formData.motivo
+             };
+
+             console.log('[Paciente - DoctoresMain] Datos de cita a enviar:', citaData);
+
+             const response = await ApiService.createCita(citaData);
+
+             if (response) {
+                 console.log('[Paciente - DoctoresMain] Cita agendada exitosamente');
+                 setModalVisible(false);
+                 setSelectedDoctor(null);
+                 setSelectedSlots([]);
+                 Alert.alert("¡Éxito!", "Su cita ha sido agendada correctamente");
+             }
+         } catch (error) {
+             console.error('[Paciente - DoctoresMain] Error agendando cita:', error);
+             Alert.alert("Error", error.message || "Error al agendar la cita");
+         }
+     };
 
     return (
         <ScrollView contentContainerStyle={{flexGrow: 1,paddingBottom: "30%", paddingTop:"15%", backgroundColor: col.background}}>

@@ -3,10 +3,11 @@ import {useSelector} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import Add from "../../../../../components/Buttons/Add";
 import CountCard from "../../../../../components/cards/CountCard";
-import {useEffect, useState} from "react";
+import {useEffect, useState, useMemo} from "react";
 import ApiService from "../../../../../Src/services/api/Api";
 import TableCitas from "./elements/TableCitas";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
+import AppointmentSlotSelector from "../../../../../components/AppointmentSlotSelector";
 
 let col = colors;
 
@@ -19,6 +20,7 @@ export default function CitasMain() {
     const [modalVisible, setModalVisible] = useState(false);
     const [doctors, setDoctors] = useState([]);
     const [patients, setPatients] = useState([]);
+    const [selectedSlots, setSelectedSlots] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -34,38 +36,50 @@ export default function CitasMain() {
         fetchData();
     }, []);
 
-    const formFields = [
+    // Opciones de pacientes memoizadas
+    const patientOptions = useMemo(() => {
+        console.log('[Admin - CitasMain] Memoizando opciones de pacientes');
+        return patients.map(patient => ({
+            value: patient.id,
+            label: `${patient.nombres} ${patient.apellidos}`
+        }));
+    }, [patients]);
+
+    // Opciones de doctores memoizadas
+    const doctorOptions = useMemo(() => {
+        console.log('[Admin - CitasMain] Memoizando opciones de doctores');
+        return doctors.map(doctor => ({
+            value: doctor.id,
+            label: `${doctor.nombres} ${doctor.apellidos}`
+        }));
+    }, [doctors]);
+
+    // Formulario memoizado para evitar recreaciones
+    const formFields = useMemo(() => [
         {
             name: 'id_paciente',
             label: 'Paciente',
             type: 'select',
             required: true,
-            options: patients.map(patient => ({
-                value: patient.id,
-                label: `${patient.nombres} ${patient.apellidos}`
-            }))
+            options: patientOptions
         },
         {
             name: 'id_doctor',
             label: 'Doctor',
             type: 'select',
             required: true,
-            options: doctors.map(doctor => ({
-                value: doctor.id,
-                label: `${doctor.nombres} ${doctor.apellidos}`
-            }))
+            options: doctorOptions
         },
         {
-            name: 'fecha_cita',
-            label: 'Fecha de Cita',
-            type: 'date',
-            required: true,
-            min: new Date().toISOString().split('T')[0]
+            type: 'custom',
+            component: AppointmentSlotSelector,
+            props: {
+                onSlotsSelected: setSelectedSlots
+            }
         },
-        {name: 'hora_cita', label: 'Hora de Cita', type: 'time', required: true},
         {name: 'lugar', label: 'Lugar', type: 'text', required: true, maxLength: 255},
         {name: 'motivo', label: 'Motivo', type: 'text', required: true, maxLength: 255},
-    ];
+    ], [patientOptions, doctorOptions]);
     const fetchCitasCount = async () => {
         try {
             const response = await ApiService.request('/countCitas');
@@ -89,19 +103,51 @@ export default function CitasMain() {
 
     const handleCancel = () => {
         setModalVisible(false);
+        setSelectedSlots([]);
         console.log("cancel");
     }
 
     const handleSubmit = async (formData) => {
         try {
+            console.log("formData recibido:", formData);
+            console.log("selectedSlots:", selectedSlots);
+            // Validaciones
+            if (selectedSlots.length === 0) {
+                Alert.alert("Error", "Debe seleccionar al menos un slot de horario");
+                return;
+            }
+
+            // Validar campos requeridos
+            if (!formData.id_paciente || formData.id_paciente === "") {
+                Alert.alert("Error", "Debe seleccionar un paciente");
+                return;
+            }
+            if (!formData.id_doctor || formData.id_doctor === "") {
+                Alert.alert("Error", "Debe seleccionar un doctor");
+                return;
+            }
+            if (!formData.lugar || formData.lugar.trim() === "") {
+                Alert.alert("Error", "El campo lugar es requerido");
+                return;
+            }
+            if (!formData.motivo || formData.motivo.trim() === "") {
+                Alert.alert("Error", "El campo motivo es requerido");
+                return;
+            }
+
+            // Usar la fecha y hora del primer slot seleccionado
+            const fecha_cita = selectedSlots[0].fecha;
+            const hora_cita = selectedSlots[0].hora_inicio;
+
             const citaData = {
                 id_paciente: formData.id_paciente,
                 id_doctor: formData.id_doctor,
-                fecha_cita: formData.fecha_cita,
-                hora_cita: formData.hora_cita,
+                fecha_cita: fecha_cita,
+                hora_cita: hora_cita,
                 lugar: formData.lugar,
                 motivo: formData.motivo
             };
+            console.log("citaData a enviar:", citaData);
 
             const response = await ApiService.request('/citas', {
                 method: 'POST',
@@ -109,6 +155,7 @@ export default function CitasMain() {
             });
             if (response) {
                 setModalVisible(false);
+                setSelectedSlots([]);
                 Alert.alert("Éxito", "Cita registrada correctamente");
                 fetchCitasCount();
             }
