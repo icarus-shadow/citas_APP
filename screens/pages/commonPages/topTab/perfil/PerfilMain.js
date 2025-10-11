@@ -29,7 +29,6 @@ const DOCTOR_DISPLAY_FIELDS = [
     { key: 'apellidos', label: 'Apellidos' },
     { key: 'cedula', label: 'Cédula' },
     { key: 'especialidades', label: 'Especialidades' },
-    { key: 'horario', label: 'Horario' },
     { key: 'lugar_trabajo', label: 'Lugar de Trabajo' },
 ];
 

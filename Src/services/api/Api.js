@@ -295,6 +295,31 @@ class ApiService {
         return await this.request(`/doctor/${doctorId}/count-pacientes-atendidos`, { method: 'GET' });
     }
 
+    // Métodos para doctores
+    async getCitasDoctor() {
+        return await this.request('/doctor/mis-citas', { method: 'GET' });
+    }
+
+    async getPacientes() {
+        return await this.request('/pacientes', { method: 'GET' });
+    }
+
+    // Métodos para doctores - horarios y notificaciones
+    async getMisHorarios() {
+        return await this.request('/mis-horarios', { method: 'GET' });
+    }
+
+    async createNotificacion(data) {
+        return await this.request('/notificaciones', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    }
+
+    async getMisNotificaciones() {
+        return await this.request('/mis-notificaciones', { method: 'GET' });
+    }
+
     /**
      * Métdo para obtener la lista de administradores de soporte
      *

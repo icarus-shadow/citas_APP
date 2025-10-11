@@ -5,7 +5,7 @@ import Add from "../../../../../components/Buttons/Add";
 import CountCard from "../../../../../components/cards/CountCard";
 import {useEffect, useState, useMemo} from "react";
 import ApiService from "../../../../../Src/services/api/Api";
-import TableCitas from "./elements/TableCitas";
+import TableCitasAdmin from "./elements/TableCitasAdmin";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
 import AppointmentSlotSelector from "../../../../../components/AppointmentSlotSelector";
 
@@ -173,7 +173,7 @@ export default function CitasMain() {
                     <Add onPressed={handleNewCita}/>
                     <CountCard title="Citas" number={citasCount} />
                 </View>
-                <TableCitas />
+                <TableCitasAdmin />
                 <DynamicFormModal
                     visible={modalVisible}
                     onCloses={handleCancel}
