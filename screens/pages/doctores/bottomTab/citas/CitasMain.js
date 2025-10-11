@@ -34,7 +34,7 @@ export default function CitasMain() {
     const fetchCitasCount = async () => {
         try {
             console.log('[Doctor - CitasMain] Obteniendo conteo de citas del doctor...');
-            const response = await ApiService.request('/doctor/citas', { method: 'GET' });
+            const response = await ApiService.request('/countCitas', { method: 'GET' });
             if (Array.isArray(response)) {
                 setCitasCount(response.length);
                 console.log(`[Doctor - CitasMain] Total de citas del doctor: ${response.length}`);
@@ -54,7 +54,7 @@ export default function CitasMain() {
     const fetchPacientes = async () => {
         try {
             console.log('[Doctor - CitasMain] Obteniendo lista de pacientes...');
-            const response = await ApiService.request('/doctor/pacientes-disponibles', { method: 'GET' });
+            const response = await ApiService.request('/doctorPacientes', { method: 'GET' });
             console.log('[Doctor - CitasMain] Respuesta de pacientes:', response);
             if (Array.isArray(response)) {
                 setPacientes(response);

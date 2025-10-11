@@ -14,7 +14,7 @@ export default function TableCitasDoctor({ onView, refreshTrigger }) {
     const fetchPacientes = async () => {
         try {
             console.log('[TableCitasDoctor] Obteniendo lista de pacientes...');
-            const response = await ApiService.request('/doctor/pacientes-disponibles', { method: 'GET' });
+            const response = await ApiService.request('/doctorPacientes', { method: 'GET' });
             console.log('[TableCitasDoctor] Respuesta de pacientes:', response);
             if (Array.isArray(response)) {
                 setPacientes(response);
@@ -33,7 +33,7 @@ export default function TableCitasDoctor({ onView, refreshTrigger }) {
     const fetchCitas = async () => {
         try {
             console.log('[TableCitasDoctor] Obteniendo citas del doctor...');
-            const response = await ApiService.request('/doctor/citas', { method: 'GET' });
+            const response = await ApiService.request('/doctorCitas', { method: 'GET' });
             console.log('[TableCitasDoctor] Respuesta de citas:', response);
             if (Array.isArray(response)) {
                 const citasConNombres = response.map(cita => ({
@@ -75,7 +75,7 @@ export default function TableCitasDoctor({ onView, refreshTrigger }) {
     const handleDelete = () => {
         const deleteCita = async () => {
             try {
-                const response = await ApiService.request(`/doctor/citas/${dataToEdit.id}`, {
+                const response = await ApiService.request(`/doctorCitas/${dataToEdit.id}`, {
                     method: 'DELETE',
                 });
                 if (response) {
@@ -101,7 +101,7 @@ export default function TableCitasDoctor({ onView, refreshTrigger }) {
                     "lugar": item.lugar,
                     "motivo": item.motivo,
                 };
-                const response = await ApiService.request(`/doctor/citas/${item.id}`, {
+                const response = await ApiService.request(`/doctorCitas/${item.id}`, {
                     method: 'PUT',
                     body: JSON.stringify(body)
                 });
