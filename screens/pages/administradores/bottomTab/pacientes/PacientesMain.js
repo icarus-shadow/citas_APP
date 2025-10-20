@@ -1,21 +1,27 @@
 import {View, Text, StyleSheet, Alert, ScrollView} from 'react-native';
-import {useSelector} from "react-redux";
+import {useEffect, useState} from "react";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
+import ApiService from "../../../../../Src/services/api/Api";
+
+// comonentes
 import Add from "../../../../../components/Buttons/Add";
 import CountCard from "../../../../../components/cards/CountCard";
-import {useEffect, useState} from "react";
-import ApiService from "../../../../../Src/services/api/Api";
 import TablePacientes from "./elements/TablePacientes";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
 
+// slices
+import {useDispatch, useSelector} from "react-redux";
+import {fetchPacientesCounter} from "../../../../../utils/slices/counters/PacientesCounterSlice";
+import {fetchPacientes} from "../../../../../utils/slices/data/PacientesSlice"
+
 let col = colors;
-
-
 export default function PacientesMain() {
+    const dispatch = useDispatch();
+    const pacientesCount = useSelector((state) => state.pacientesCounter.pacientesCount);
+
     const isDark = useSelector((state) => state.darkMode.value);
     isDark ? (col = colors) : (col = darkColors);
 
-    const [pacientesCount, setPacientesCount] = useState(0);
     const [modalVisible, setModalVisible] = useState(false);
     const formFields = [
         {name: 'email', label: 'Email', type: 'email', required: true},
@@ -24,7 +30,7 @@ export default function PacientesMain() {
         {name: 'apellidos', label: 'Apellidos', type: 'text', required: true},
         {name: 'documento', label: 'Documento', type: 'number', required: true},
         {name: 'rh', label: 'RH', type: 'text', required: true},
-        {name: 'fecha_nacimiento', label: 'Fecha de Nacimiento', type: 'text', required: true},
+        {name: 'fecha_nacimiento', label: 'Fecha de Nacimiento', type: 'date', required: true},
         {
             name: 'genero', label: 'Género', type: 'select', required: true, options: [
                 {label: 'Masculino', value: 'M'},
@@ -36,21 +42,14 @@ export default function PacientesMain() {
         {name: 'alergias', label: 'Alergias', type: 'textarea'},
         {name: 'comentarios', label: 'Comentarios', type: 'textarea'},
     ];
-    const fetchPacientesCount = async () => {
-        try {
-            const response = await ApiService.request('/countPacientes');
-            if (response.total === undefined) {
-                console.log(`no hay pacientes`);
-                setPacientesCount(0);
-            } else {
-                setPacientesCount(response.total);
-            }
-        } catch (error) {
-            console.error('Error fetching pacientes count:', error);
-        }
-    };
+
+    const actualizarInformacion = () => {
+        dispatch(fetchPacientesCounter());
+        dispatch(fetchPacientes())
+    }
+
     useEffect(() => {
-        fetchPacientesCount();
+        actualizarInformacion();
     }, []);
 
     const handleNewPaciente = () => {
@@ -59,7 +58,6 @@ export default function PacientesMain() {
 
     const handleCancel = () => {
         setModalVisible(false);
-        console.log("cancel");
     }
 
     const handleSubmit = async (formData) => {
@@ -78,12 +76,11 @@ export default function PacientesMain() {
                 alergias: formData.alergias,
                 comentarios: formData.comentarios
             };
-
             const response = await ApiService.register(userData);
             if (response.paciente) {
                 setModalVisible(false);
                 Alert.alert("Éxito", "Paciente registrado correctamente");
-                fetchPacientesCount();
+                actualizarInformacion();
             }
         } catch (error) {
             Alert.alert("Error", error.message || "Error al registrar paciente");

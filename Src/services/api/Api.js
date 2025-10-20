@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const URL_BASE = "http://10.55.37.227:8000/api";
+const URL_BASE = "http://10.171.196.227:8000/api";
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'user_data';
 
@@ -35,7 +35,7 @@ class ApiService {
             try {
                 data = await response.json();
             } catch {
-                data = { message: "[API] Error al procesar la respuesta"};
+                data = { message: "[API] Error al procesar la respuesta"};r
             }
 
             if (!response.ok) {
@@ -117,9 +117,20 @@ class ApiService {
         });
         return response;
     }
+
     async getCurrentUser() {
         return await this.request('/user', { method: 'GET' });
     }
+    /**
+     * Obtiene la información completa de un usuario por su ID.
+     * @param {number|string} id - ID del usuario a consultar.
+     * @returns {Promise<Object>} Promesa que resuelve con el objeto del usuario.
+     * @throws {Error} Si el usuario no existe (404) o hay errores de autenticación/autorización.
+     */
+    async getUserById(id) {
+        return await this.request(`/users/${id}`, { method: 'GET' });
+    }
+
 
 
     async logout() {
@@ -127,6 +138,7 @@ class ApiService {
         await AsyncStorage.removeItem(USER_KEY);
         return true;
     }
+
 
     async getPaciente() {
         return await this.request('/mi-perfil', { method: 'GET' });
@@ -320,32 +332,7 @@ class ApiService {
         return await this.request('/mis-notificaciones', { method: 'GET' });
     }
 
-    /**
-     * Métdo para obtener la lista de administradores de soporte
-     *
-     * Este métdo realiza una petición GET al endpoint '/support-admins' para obtener
-     * la lista de administradores disponibles para soporte al usuario. Esta información
-     * se utiliza en la pantalla de soporte para permitir que los usuarios contacten
-     * a administradores mediante correo electrónico.
-     *
-     * Endpoint: GET /api/support-admins
-     * Autenticación: Requiere token Bearer (automáticamente incluido por this.request)
-     * Respuesta esperada: Array de objetos administrador con propiedades como:
-     * - id: Identificador único del administrador
-     * - nombres: Nombres del administrador
-     * - apellidos: Apellidos del administrador
-     * - email: Correo electrónico para contacto
-     *
-     * @returns {Promise<Array>} Promesa que resuelve con array de administradores
-     * @throws {Error} Error si la petición falla o no hay autenticación
-     */
     async getSupportAdmins() {
-        // Realizar petición GET al endpoint de administradores de soporte
-        // El métdo this.request automáticamente:
-        // - Incluye el token de autenticación si existe
-        // - Maneja errores de red y autenticación
-        // - Procesa la respuesta JSON
-        // - Registra logs de la petición
         return await this.request('/support-admins', { method: 'GET' });
     }
 

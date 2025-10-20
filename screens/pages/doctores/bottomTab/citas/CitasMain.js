@@ -8,6 +8,7 @@ import TableCitasDoctor from "./elements/TableCitasDoctor";
 import InfoCardDoctor from "./elements/InfoCardDoctor";
 import DynamicFormModalDoctor from "./elements/DynamicFormModalDoctor";
 import AppointmentSlotSelectorDoctor from "./elements/AppointmentSlotSelectorDoctor";
+import Api from "../../../../../Src/services/api/Api";
 
 let col = colors;
 
@@ -21,8 +22,6 @@ export default function CitasMain() {
     isDark ? (col = colors) : (col = darkColors);
 
     const [citasCount, setCitasCount] = useState(0);
-    const [visible, setVisible] = useState(false);
-    const [dataToEdit, setDataToEdit] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedSlots, setSelectedSlots] = useState([]);
     const [pacientes, setPacientes] = useState([]);
@@ -112,18 +111,6 @@ export default function CitasMain() {
         ];
     }, [pacientes]);
 
-    /**
-     * Maneja la visualización de detalles de una cita
-     */
-    const handleView = (cita) => {
-        console.log('[Doctor - CitasMain] Mostrando detalles de cita:', cita);
-        if (!cita || !cita.id) {
-            Alert.alert("Error", "No se puede mostrar: datos inválidos");
-            return;
-        }
-        setDataToEdit(cita);
-        setVisible(true);
-    };
 
     /**
      * Cancela el proceso de agendar cita
@@ -134,61 +121,7 @@ export default function CitasMain() {
         setSelectedSlots([]);
     };
 
-    /**
-     * Maneja el guardado de cambios en una cita
-     */
-    const handleSaveCita = async (updatedData) => {
-        try {
-            console.log('[Doctor - CitasMain] Guardando cambios en cita:', updatedData);
-            const dataToSend = {
-                id_paciente: updatedData.paciente,
-                fecha_cita: updatedData.fecha_cita,
-                hora_cita: updatedData.hora_cita,
-                lugar: updatedData.lugar,
-                motivo: updatedData.motivo || "Sin motivo"
-            };
-            await ApiService.request(`/doctor/citas/${dataToEdit.id}`, { method: 'PUT', body: JSON.stringify(dataToSend) });
-            console.log('[Doctor - CitasMain] Cita actualizada exitosamente');
-            setVisible(false);
-            setRefreshTable(prev => prev + 1); // Actualizar tabla
-            fetchCitasCount(); // Actualizar conteo
-            Alert.alert("¡Éxito!", "La cita ha sido actualizada correctamente");
-        } catch (error) {
-            console.error('[Doctor - CitasMain] Error actualizando cita:', error);
-            Alert.alert("Error", error.message || "Error al actualizar la cita");
-        }
-    };
 
-    /**
-     * Maneja la eliminación de una cita
-     */
-    const handleDeleteCita = async () => {
-        Alert.alert(
-            "Confirmar Eliminación",
-            "¿Estás seguro de que quieres eliminar esta cita?",
-            [
-                { text: "Cancelar", style: "cancel" },
-                {
-                    text: "Eliminar",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            console.log('[Doctor - CitasMain] Eliminando cita:', dataToEdit.id);
-                            await ApiService.request(`/doctor/citas/${dataToEdit.id}`, { method: 'DELETE' });
-                            console.log('[Doctor - CitasMain] Cita eliminada exitosamente');
-                            setVisible(false);
-                            setRefreshTable(prev => prev + 1); // Actualizar tabla
-                            fetchCitasCount(); // Actualizar conteo
-                            Alert.alert("¡Éxito!", "La cita ha sido eliminada correctamente");
-                        } catch (error) {
-                            console.error('[Doctor - CitasMain] Error eliminando cita:', error);
-                            Alert.alert("Error", error.message || "Error al eliminar la cita");
-                        }
-                    }
-                }
-            ]
-        );
-    };
 
     /**
      * Procesa el envío del formulario de cita
@@ -203,12 +136,15 @@ export default function CitasMain() {
                 return;
             }
 
+            const user = await Api.getDoctor("/mi-perfil-doctor");
+            const id_doctor = user.id;
+
             // Usar la fecha y hora del primer slot seleccionado
             const fecha_cita = selectedSlots[0].fecha;
             const hora_cita = selectedSlots[0].hora_inicio;
 
             const citaData = {
-                id_doctor: user.doctor.id, // Doctor fijo del usuario logueado
+                id_doctor: id_doctor,
                 id_paciente: formData.id_paciente,
                 fecha_cita: fecha_cita,
                 hora_cita: hora_cita,
@@ -218,7 +154,7 @@ export default function CitasMain() {
 
             console.log('[Doctor - CitasMain] Datos de cita a enviar:', citaData);
 
-            const response = await ApiService.request('/doctor/citas', { method: 'POST', body: JSON.stringify(citaData) });
+            const response = await ApiService.request('/doctorCitas', { method: 'POST', body: JSON.stringify(citaData) });
 
             if (response) {
                 console.log('[Doctor - CitasMain] Cita agendada exitosamente');
@@ -268,7 +204,7 @@ export default function CitasMain() {
                     </Text>
                 </TouchableOpacity>
 
-                <TableCitasDoctor onView={handleView} refreshTrigger={refreshTable} />
+                <TableCitasDoctor refreshTrigger={refreshTable} pacienteOptions={pacientes} />
 
                 <DynamicFormModalDoctor
                     visible={modalVisible}
@@ -278,23 +214,6 @@ export default function CitasMain() {
                     title="Agendar Nueva Cita"
                 />
 
-                {visible && dataToEdit && (
-                    <InfoCardDoctor
-                        data={{
-                            ...dataToEdit,
-                            doctor: dataToEdit.doctor ? `${dataToEdit.doctor.nombres} ${dataToEdit.doctor.apellidos}` : 'Sin doctor',
-                            paciente: dataToEdit.paciente ? `${dataToEdit.paciente.nombres} ${dataToEdit.paciente.apellidos}` : 'Sin paciente'
-                        }}
-                        visible={visible}
-                        hiddenFields={["id", "updated_at", "created_at", "user_id", "id_doctor"]}
-                        readOnlyFields={["doctor"]}
-                        pacienteOptions={pacientes}
-                        onSave={handleSaveCita}
-                        onDelete={handleDeleteCita}
-                        onClose={() => setVisible(false)}
-                        title="Detalles de la Cita"
-                    />
-                )}
             </View>
         </ScrollView>
     )

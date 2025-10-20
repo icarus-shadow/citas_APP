@@ -3,17 +3,14 @@ import { View, Text, TouchableOpacity, ScrollView, Alert, Platform, Modal } from
 import { useSelector } from 'react-redux';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ApiService from "../../../../../../Src/services/api/Api";
+import Api from "../../../../../../Src/services/api/Api";
 
 
 const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-function AppointmentSlotSelectorDoctor({ formData, onSlotsSelected }) {
-    console.log('[AppointmentSlotSelectorDoctor] Re-render triggered');
-    console.log('[AppointmentSlotSelectorDoctor] Props:', { formData, onSlotsSelected });
 
-    // El doctor está fijo (obtenido del usuario logueado)
-    const user = useSelector((state) => state.auth.user);
-    const selectedDoctor = user?.doctor?.id;
+function AppointmentSlotSelectorDoctor({ formData, onSlotsSelected }) {
+
 
     const [slots, setSlots] = useState([]);
     const [selectedSlots, setSelectedSlots] = useState([]);
@@ -24,21 +21,21 @@ function AppointmentSlotSelectorDoctor({ formData, onSlotsSelected }) {
     const [showDatePickerModal, setShowDatePickerModal] = useState(false);
 
     const fetchSlots = async () => {
-        console.log('[AppointmentSlotSelectorDoctor] fetchSlots called with selectedDoctor:', selectedDoctor, 'selectedDate:', selectedDate);
-        if (!selectedDoctor || !selectedDate) {
-            console.log('[AppointmentSlotSelectorDoctor] No hay doctor o fecha seleccionada');
+        if (!selectedDate) {
+            console.log('[AppointmentSlotSelectorDoctor] No hay fecha seleccionada');
             setSlots([]);
             return;
         }
+        const user = await Api.getDoctor("/mi-perfil-doctor");
+        const id_doctor = user.id;
 
         setLoading(true);
         setError(null);
         try {
-            console.log(`[AppointmentSlotSelectorDoctor] Obteniendo slots disponibles para doctor ${selectedDoctor} en fecha ${selectedDate.toISOString().split('T')[0]}`);
-
+            console.log(`id doctor = ${id_doctor}`);
             // Formatear fecha para la API
             const dateStr = selectedDate.toISOString().split('T')[0];
-            const slotsResponse = await ApiService.getAvailableSlots(selectedDoctor, dateStr, dateStr);
+            const slotsResponse = await ApiService.getAvailableSlots(id_doctor, dateStr, dateStr);
             console.log(`[AppointmentSlotSelectorDoctor] Slots obtenidos: ${slotsResponse.length}`);
 
             // Procesar slots disponibles
@@ -68,7 +65,7 @@ function AppointmentSlotSelectorDoctor({ formData, onSlotsSelected }) {
 
     useEffect(() => {
         fetchSlots();
-    }, [selectedDoctor, selectedDate]);
+    }, [selectedDate]);
 
     // Limpiar slots seleccionados cuando cambia la fecha
     useEffect(() => {
@@ -100,13 +97,16 @@ function AppointmentSlotSelectorDoctor({ formData, onSlotsSelected }) {
     };
 
     const handleSlotPress = async (slot) => {
-        console.log('[AppointmentSlotSelectorDoctor] handleSlotPress called with selectedDoctor:', selectedDoctor, 'slot:', slot);
+        console.log('[AppointmentSlotSelectorDoctor] handleSlotPress called with slot:', slot);
         if (!slot.disponible) return;
+
+        const user = await Api.getDoctor("/mi-perfil-doctor");
+        const id_doctor = user.id;
 
         // Validar slot en tiempo real
         try {
             const dateStr = selectedDate.toISOString().split('T')[0];
-            const validation = await ApiService.validateSlot(selectedDoctor, dateStr, slot.hora_inicio);
+            const validation = await ApiService.validateSlot(id_doctor, dateStr, slot.hora_inicio);
             if (!validation.available) {
                 Alert.alert('Slot no disponible', 'Este horario ya ha sido reservado. Por favor selecciona otro.');
                 // Recargar slots para actualizar disponibilidad
@@ -166,17 +166,6 @@ function AppointmentSlotSelectorDoctor({ formData, onSlotsSelected }) {
             return { backgroundColor: '#f0f0f0', borderColor: '#cccccc' };
         }
     };
-
-    if (!selectedDoctor) {
-        return (
-            <View style={{ padding: 20, alignItems: 'center' }}>
-                <Text style={{ fontSize: 16, color: '#666' }}>
-                    No se pudo obtener la información del doctor
-                </Text>
-            </View>
-        );
-    }
-
 
     if (loading) {
         return (

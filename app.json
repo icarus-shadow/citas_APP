@@ -16,14 +16,24 @@
       "supportsTablet": true
     },
     "android": {
+      "useNextNotificationsApi": true,
+      "intentFilters": [],
+      "permissions": [],
+      "useCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.shadowphantom.AppCitas"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5c875513-33cb-4812-ba16-60987cfb89b0"
+      }
     }
   }
 }

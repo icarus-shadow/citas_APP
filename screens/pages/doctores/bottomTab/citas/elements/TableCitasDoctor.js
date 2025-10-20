@@ -4,31 +4,11 @@ import TableDinamic from "../../../../../../components/TableDinamic";
 import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCardDoctor from "./InfoCardDoctor";
 
-export default function TableCitasDoctor({ onView, refreshTrigger }) {
+export default function TableCitasDoctor({ onView, refreshTrigger, pacienteOptions = [] }) {
     const [data, setData] = useState([]);
     const [columns, setColumns] = useState([]);
     const [visible, setVisible] = useState(false);
     const [dataToEdit, setDataToEdit] = useState(null);
-    const [pacientes, setPacientes] = useState([]);
-
-    const fetchPacientes = async () => {
-        try {
-            console.log('[TableCitasDoctor] Obteniendo lista de pacientes...');
-            const response = await ApiService.request('/doctorPacientes', { method: 'GET' });
-            console.log('[TableCitasDoctor] Respuesta de pacientes:', response);
-            if (Array.isArray(response)) {
-                setPacientes(response);
-                console.log(`[TableCitasDoctor] Pacientes cargados: ${response.length}`);
-                response.forEach(p => console.log(`Paciente: ${p.nombres} ${p.apellidos}`));
-            } else {
-                console.log('[TableCitasDoctor] Respuesta no es un array');
-                setPacientes([]);
-            }
-        } catch (error) {
-            console.error('[TableCitasDoctor] Error obteniendo pacientes:', error);
-            setPacientes([]);
-        }
-    };
 
     const fetchCitas = async () => {
         try {
@@ -36,12 +16,8 @@ export default function TableCitasDoctor({ onView, refreshTrigger }) {
             const response = await ApiService.request('/doctorCitas', { method: 'GET' });
             console.log('[TableCitasDoctor] Respuesta de citas:', response);
             if (Array.isArray(response)) {
-                const citasConNombres = response.map(cita => ({
-                    ...cita,
-                    Paciente: `${cita.paciente.nombres} ${cita.paciente.apellidos}`
-                }));
-                setData(citasConNombres);
-                setColumns(["fecha_cita", "hora_cita", "lugar", "Paciente"]);
+                setData(response);
+                setColumns(["fecha_cita", "hora_cita", "lugar", "paciente"]);
                 console.log(`[TableCitasDoctor] Citas cargadas: ${response.length}`);
             } else {
                 console.log('[TableCitasDoctor] Respuesta no es un array');
@@ -54,7 +30,6 @@ export default function TableCitasDoctor({ onView, refreshTrigger }) {
     };
 
     useEffect(() => {
-        fetchPacientes();
         fetchCitas();
     }, []);
 
@@ -66,8 +41,10 @@ export default function TableCitasDoctor({ onView, refreshTrigger }) {
 
     const handleView = (item) => {
         console.log('[TableCitasDoctor] Mostrando detalles de cita:', item);
-        console.log('[TableCitasDoctor] Estado de pacientes:', pacientes);
+        console.log('[TableCitasDoctor] item keys:', Object.keys(item), 'item.paciente:', item.paciente, 'item.doctor:', item.doctor);
+        console.log('[TableCitasDoctor] dataToEdit antes de set:', dataToEdit);
         setDataToEdit(item);
+        console.log('[TableCitasDoctor] dataToEdit después de set:', item);
         setVisible(true);
         if (onView) onView(item);
     };
@@ -95,7 +72,6 @@ export default function TableCitasDoctor({ onView, refreshTrigger }) {
         const updateCita = async () => {
             try {
                 let body = {
-                    "id_paciente": item.paciente,
                     "fecha_cita": item.fecha_cita,
                     "hora_cita": item.hora_cita,
                     "lugar": item.lugar,
@@ -108,7 +84,6 @@ export default function TableCitasDoctor({ onView, refreshTrigger }) {
 
                 if (response) {
                     Alert.alert("Éxito", "Cita actualizada correctamente");
-                    fetchPacientes();
                     fetchCitas();
                 }
             } catch (error) {
@@ -131,14 +106,13 @@ export default function TableCitasDoctor({ onView, refreshTrigger }) {
             {visible && dataToEdit && (
                 <InfoCardDoctor
                     data={{
-                        ...dataToEdit,
-                        doctor: dataToEdit.doctor ? `${dataToEdit.doctor.nombres} ${dataToEdit.doctor.apellidos}` : 'Sin doctor',
-                        paciente: dataToEdit.paciente ? `${dataToEdit.paciente.nombres} ${dataToEdit.paciente.apellidos}` : 'Sin paciente'
+                        ...dataToEdit
                     }}
                     visible={visible}
                     hiddenFields={["id", "updated_at", "created_at", "user_id", "id_doctor"]}
-                    readOnlyFields={["doctor"]}
-                    pacienteOptions={pacientes.map(p => ({ label: `${p.nombres} ${p.apellidos}`.trim(), value: p.id }))}
+                    readOnlyFields={["doctor", "paciente", "hora_cita"]}
+                    showHorarios={true}
+                    pacienteOptions={pacienteOptions}
                     onClose={() => setVisible(false)}
                     onDelete={handleDelete}
                     onSave={handleSave}

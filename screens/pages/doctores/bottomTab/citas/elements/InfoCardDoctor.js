@@ -5,6 +5,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useSelector } from "react-redux";
 import { colors, darkColors } from "../../../../../../utils/desing/Colors";
 import ApiService from "../../../../../../Src/services/api/Api";
+import DateSlotSelectorModal from "../../../../../../components/modals/DateSlotSelectorModal";
 
 const InfoCardDoctor = ({
     data,
@@ -67,10 +68,18 @@ const InfoCardDoctor = ({
     const col = isDark ? colors : darkColors;
 
     useEffect(() => {
+        console.log('[InfoCardDoctor] useEffect - data:', data);
+        console.log('[InfoCardDoctor] useEffect - data keys:', Object.keys(data));
+        console.log('[InfoCardDoctor] useEffect - data.paciente:', data.paciente, 'data.doctor:', data.doctor, 'data.id_doctor:', data.id_doctor, 'data.id_paciente:', data.id_paciente);
+        console.log('[InfoCardDoctor] useEffect - visible:', visible);
         // Initialize values with IDs for select fields
         const initialValues = { ...data };
-        if (data.id_paciente && !data.paciente) initialValues.paciente = data.id_paciente;
+        initialValues.paciente = data.id_paciente;
         if (data.id_doctor && !data.doctor) initialValues.doctor = data.id_doctor;
+        console.log('[InfoCardDoctor] initialValues before setting doctor:', initialValues);
+        // Fix: set doctor to the name for display
+        initialValues.doctor = data.doctor;
+        console.log('[InfoCardDoctor] initialValues after setting doctor:', initialValues);
         setValues(initialValues);
         setOriginalValues(initialValues);
         setEditStates({});
@@ -144,8 +153,11 @@ const InfoCardDoctor = ({
         setModified(true);
         validateField(key, value);
         if (key === 'doctor' && value !== originalValues.doctor && fieldsToShow.includes('doctor')) {
+            console.log('[InfoCardDoctor] Doctor cambió, abriendo modal de fecha:', value);
             setSelectedDoctor(value);
             setShowDateSlotModal(true);
+        } else {
+            console.log('[InfoCardDoctor] Cambio en', key, 'pero no se abre modal de fecha. Condiciones:', { keyIsDoctor: key === 'doctor', valueChanged: value !== originalValues.doctor, inFields: fieldsToShow.includes('doctor') });
         }
     };
 
@@ -311,17 +323,54 @@ const InfoCardDoctor = ({
 
                     <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                         <View style={styles.fieldsContainer}>
-                            {fieldsToShow
-                                .filter((key) => !hiddenFields.includes(key) && data.hasOwnProperty(key))
+                            {(() => {
+                                const filteredFields = fieldsToShow.filter((key) => !hiddenFields.includes(key) && data.hasOwnProperty(key));
+                                console.log('[InfoCardDoctor] Rendering fields:', filteredFields, 'data:', data, 'data.hasOwnProperty for each:', fieldsToShow.map(k => ({key: k, has: data.hasOwnProperty(k)})));
+                                return filteredFields;
+                            })()
                                 .map((key) => {
+                                    console.log(`[InfoCardDoctor] Mapping field: ${key}, data[${key}]:`, data[key]);
                                     const isSelect = localSelectFields[key];
                                     return (
                                         <View key={key} style={styles.fieldContainer}>
                                             <Text style={styles.fieldLabel(col)}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
                                             <View style={styles.inputContainer}>
-                                                {key === 'doctor' && !editStates[key] ? (
+                                                {console.log(`[InfoCardDoctor] Render field ${key} - editStates[${key}]:`, editStates[key], 'isSelect:', !!localSelectFields[key])}
+                                                {key === 'paciente' ? (
+                                                    pacienteOptions.length > 0 && editStates[key] ? (
+                                                        <View style={styles.pickerContainer(col, editStates[key])}>
+                                                            <Picker
+                                                                enabled={!!editStates[key]}
+                                                                selectedValue={(values?.paciente ?? '').toString()}
+                                                                onValueChange={(val) => handleChange('paciente', val)}
+                                                                style={styles.picker(col, editStates[key])}
+                                                                dropdownIconColor={col.primary}
+                                                            >
+                                                                {localSelectFields.paciente?.options?.map((option) => (
+                                                                    <Picker.Item
+                                                                        key={option.value}
+                                                                        label={option.label}
+                                                                        value={option.value}
+                                                                        color={col.text}
+                                                                    />
+                                                                ))}
+                                                            </Picker>
+                                                        </View>
+                                                    ) : (
+                                                        <Text style={styles.textInput(col, editStates[key])}>{data.paciente || 'Sin paciente'}</Text>
+                                                    )
+                                                ) : key === 'doctor' && !editStates[key] ? (
                                                     <Text style={styles.textInput(col, editStates[key])}>
-                                                        {data.doctor ? `${data.doctor.nombres} ${data.doctor.apellidos}` : 'Sin doctor'}
+                                                        {(() => {
+                                                            console.log('[InfoCardDoctor] Mostrando doctor especial - values.doctor:', values.doctor, 'data.doctor:', data.doctor, 'typeof values.doctor:', typeof values.doctor);
+                                                            if (typeof values.doctor === 'string') {
+                                                                return values.doctor;
+                                                            } else if (values.doctor && typeof values.doctor === 'object') {
+                                                                return `${values.doctor.nombres} ${values.doctor.apellidos}`;
+                                                            } else {
+                                                                return 'Sin doctor';
+                                                            }
+                                                        })()}
                                                     </Text>
                                                 ) : isSelect ? (
                                                     editStates[key] ? (
@@ -345,18 +394,28 @@ const InfoCardDoctor = ({
                                                         </View>
                                                     ) : (
                                                         <Text style={styles.textInput(col, editStates[key])}>
-                                                            {isSelect.options?.find(opt => opt.value != null && opt.value.toString() === (values?.[key] ?? '').toString())?.label || 'No seleccionado'}
+                                                            {(() => {
+                                                                const val = values?.[key] ?? '';
+                                                                const found = isSelect.options?.find(opt => opt.value != null && opt.value.toString() === val.toString());
+                                                                console.log(`[InfoCardDoctor] Mostrando ${key} - values[key]:`, val, 'found:', found, 'options:', isSelect.options);
+                                                                return found?.label || 'No seleccionado';
+                                                            })()}
                                                         </Text>
                                                     )
+                                                ) : !editStates[key] ? (
+                                                    <Text style={styles.textInput(col, editStates[key])}>
+                                                        {(() => {
+                                                            const val = values?.[key]?.toString();
+                                                            console.log(`[InfoCardDoctor] key: ${key}, value:`, values?.[key], `type: ${typeof values?.[key]}, toString: ${val}`);
+                                                            return val || `Ingrese ${key}`;
+                                                        })()}
+                                                    </Text>
                                                 ) : (
                                                     <TextInput
-                                                        editable={!!editStates[key]}
+                                                        editable={key === 'hora_cita' ? false : true}
                                                         value={(() => {
                                                             const val = values?.[key]?.toString();
                                                             console.log(`[InfoCardDoctor] key: ${key}, value:`, values?.[key], `type: ${typeof values?.[key]}, toString: ${val}`);
-                                                            if (key === 'paciente') {
-                                                                console.log(`[InfoCardDoctor] Nombre del paciente mostrado: ${val}`);
-                                                            }
                                                             return val;
                                                         })()}
                                                         onChangeText={(val) => handleChange(key, val)}
@@ -366,13 +425,21 @@ const InfoCardDoctor = ({
                                                     />
                                                 )}
                                                 {errors[key] && <Text style={styles.errorText(col)}>{errors[key]}</Text>}
-                                                {!readOnlyFields.includes(key) && (
+                                                {key !== 'hora_cita' && !readOnlyFields.includes(key) && (
                                                     <TouchableOpacity onPress={() => toggleEdit(key)} style={styles.editButton(col)}>
                                                         <Ionicons
                                                             name={editStates[key] ? "lock-closed" : "create"}
                                                             size={20}
                                                             color={col.primary}
                                                         />
+                                                    </TouchableOpacity>
+                                                )}
+                                                {key === 'fecha_cita' && editStates[key] && (
+                                                    <TouchableOpacity onPress={() => {
+                                                        setSelectedDoctor(values.doctor || data.id_doctor);
+                                                        setShowDateSlotModal(true);
+                                                    }} style={styles.selectDateTimeButton(col)}>
+                                                        <Ionicons name="calendar" size={20} color={col.primary} />
                                                     </TouchableOpacity>
                                                 )}
                                             </View>
@@ -497,7 +564,7 @@ const InfoCardDoctor = ({
                         doctorId={selectedDoctor}
                         onSelectSlot={(date, time) => {
                             handleChange('fecha_cita', date);
-                            handleChange('hora_cita', time);
+                            // handleChange('hora_cita', time); // Disabled time selection
                             setSelectedDoctor(null);
                         }}
                     />
@@ -518,19 +585,19 @@ const styles = StyleSheet.create({
         backgroundColor: col.background,
         borderRadius: 20,
         width: "90%",
-        height: "85%",
+        maxHeight: "75%",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.3,
         shadowRadius: 20,
         elevation: 10,
-        padding: 20,
+        padding: 15,
     }),
     header: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 20,
+        marginBottom: 15,
     },
     avatarContainer: (col) => ({
         width: 70,
@@ -568,10 +635,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     fieldsContainer: {
-        paddingBottom: 20,
+        paddingBottom: 10,
     },
     fieldContainer: {
-        marginBottom: 20,
+        marginBottom: 15,
     },
     fieldLabel: (col) => ({
         fontSize: 16,
@@ -605,10 +672,16 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         backgroundColor: col.backgroundResalt,
     }),
+    selectDateTimeButton: (col) => ({
+        marginLeft: 10,
+        padding: 8,
+        borderRadius: 20,
+        backgroundColor: col.backgroundResalt,
+    }),
     // Horarios styles
     horariosSection: {
-        marginTop: 20,
-        paddingTop: 20,
+        marginTop: 15,
+        paddingTop: 15,
         borderTopWidth: 1,
         borderTopColor: '#ddd',
     },
@@ -616,7 +689,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 15,
+        marginBottom: 10,
     },
     horariosTitle: {
         fontWeight: 'bold',
@@ -631,16 +704,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     }),
     assignedHorarios: {
-        marginTop: 10,
+        marginTop: 5,
     },
     horarioItem: (col) => ({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         backgroundColor: col.backgroundResalt,
-        padding: 12,
+        padding: 10,
         borderRadius: 8,
-        marginBottom: 8,
+        marginBottom: 5,
     }),
     horarioInfo: {
         flex: 1,
@@ -668,7 +741,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: col.textResalt,
         fontStyle: 'italic',
-        padding: 20,
+        padding: 10,
     }),
     // Modal styles
     modalOverlay: {
@@ -681,24 +754,24 @@ const styles = StyleSheet.create({
         backgroundColor: col.background,
         borderRadius: 15,
         width: '80%',
-        maxHeight: '60%',
-        padding: 20,
+        maxHeight: '50%',
+        padding: 15,
     }),
     modalTitle: (col) => ({
         fontSize: 20,
         fontWeight: 'bold',
         color: col.text,
         textAlign: 'center',
-        marginBottom: 15,
+        marginBottom: 10,
     }),
     horarioList: {
         maxHeight: 300,
     },
     horarioOption: (col) => ({
         backgroundColor: col.backgroundResalt,
-        padding: 15,
+        padding: 10,
         borderRadius: 8,
-        marginBottom: 8,
+        marginBottom: 5,
     }),
     horarioOptionText: (col) => ({
         fontSize: 16,
@@ -718,10 +791,10 @@ const styles = StyleSheet.create({
     }),
     closeModalButton: (col) => ({
         backgroundColor: col.secondary,
-        padding: 12,
+        padding: 10,
         borderRadius: 8,
         alignItems: 'center',
-        marginTop: 15,
+        marginTop: 10,
     }),
     closeModalText: (col) => ({
         color: col.background,
@@ -731,13 +804,13 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginTop: 20,
+        marginTop: 15,
     },
     saveButton: (col, enabled) => ({
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: enabled ? col.success : col.textResalt,
-        paddingVertical: 12,
+        paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 25,
         shadowColor: enabled ? col.success : col.textResalt,
@@ -750,7 +823,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: col.secondary,
-        paddingVertical: 12,
+        paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 25,
         shadowColor: col.secondary,

@@ -1,8 +1,8 @@
-import {Text, View, TouchableOpacity, StyleSheet, Modal, TextInput} from "react-native";
+import {Text, View, Switch, TouchableOpacity, StyleSheet, Modal, TextInput, Button} from "react-native";
 import DarkSwitch from "../../../../../components/DarkSwitch";
 import {useSelector, useDispatch} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import CustomAlert from "../../../../../components/CustomAlert";
 import axios from 'axios';
 import api from "../../../../../Src/services/api/Api";
@@ -10,6 +10,10 @@ import {Ionicons} from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { goToLogin } from "../../../../../Src/services/navigation/NavigationService";
+
+
+import * as Notifications from "expo-notifications";
+import { useFocusEffect } from '@react-navigation/native';
 
 let col = colors;
 
@@ -32,11 +36,79 @@ export default function ConfiguracionMain() {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    const [permisosNotificaciones, setPermisosNotificaciones] = useState(false)
+    const [loading, setLoading] = useState(true);
+
     const showAlert = (type, message) => {
         setAlertType(type);
         setAlertMessage(message);
         setAlertVisible(true);
     };
+
+    const checkPermisos = async () => {
+        const { status } = await  Notifications.getPermissionsAsync();
+        const preferencia = await AsyncStorage.getItem('notificaciones_activas');
+        setPermisosNotificaciones(status === 'granted' && preferencia === 'true');
+        setLoading(false);
+    }
+    useEffect(() => {
+        checkPermisos();
+    }, []);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            checkPermisos();
+        }, [])
+    )
+
+    const toggleSwitch = async (valor) => {
+        if (valor) {
+            const { status } = await Notifications.requestPermissionsAsync();
+            if (status === 'granted') {
+                setPermisosNotificaciones(true);
+                await AsyncStorage.setItem('notificaciones_activas', 'true')
+                showAlert('success', 'notificaciones activadas')
+            } else {
+                await AsyncStorage.setItem('notificaciones_activas', 'false')
+                setPermisosNotificaciones(false);
+                showAlert('success', 'permiso denegado')
+            }
+        } else {
+            await AsyncStorage.setItem('notificaciones_activas', 'false')
+            setPermisosNotificaciones(false);
+            showAlert('error', 'notificaciones desactivadas')
+        }
+    }
+
+
+    const programarNotificacion = async () => {
+        const { status } = await  Notifications.getPermissionsAsync();
+        const preferencia = await  AsyncStorage.getItem('notificaciones_activas')
+        if (status !== 'granted' || preferencia !== 'true') {
+            console.log(status);
+            showAlert('error', 'no tienes permisos para recibir notificaciones');
+            return;
+        }
+
+        const trigger = new Date(Date.now() +  5 * 1000);
+
+        try {
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: 'Notificacion programada',
+                    body: 'aguacate con limon'
+                },
+                trigger
+            });
+            showAlert('success', 'notificacion programada  para 5 s');
+
+        } catch (e) {
+            showAlert('error', 'error al programar la noti');
+            console.log(e);
+        }
+    }
+
+
 
 
     const handleEditPassword = () => {
@@ -267,6 +339,21 @@ export default function ConfiguracionMain() {
             >
                 <Text style={[styles.buttonText, {color: col.text}]}>Eliminar Cuenta</Text>
             </TouchableOpacity>
+
+            <Text style={{ fontSize: 18, marginBottom: 10}}>
+                Notificaciones: {permisosNotificaciones ? 'activadas' : 'desactivadas'}
+            </Text>
+            <Switch
+                value = {permisosNotificaciones}
+                onValueChange =  {toggleSwitch}
+            />
+            <TouchableOpacity
+                style={[styles.button, {backgroundColor: col.error}]}
+                onPress={programarNotificacion}
+            >
+                <Text style={[styles.buttonText, {color: col.text}]}>programar noti</Text>
+            </TouchableOpacity>
+
         </View>
     )
 }

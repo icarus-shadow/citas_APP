@@ -4,20 +4,29 @@ import TableDinamic from "../../../../../../components/TableDinamic";
 import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCard from "../../../../../../components/cards/InfoCard";
 
+import {useDispatch, useSelector} from "react-redux";
+import {fetchPacientes, selectPacientes} from "../../../../../../utils/slices/data/PacientesSlice"
+import {fetchPacientesCounter} from "../../../../../../utils/slices/counters/PacientesCounterSlice";
+
+
 export default function TablePacientes() {
-    const [data, setData] = useState([]);
     const [columns, setColumns] = useState([]);
     const [visible, setVisible] = useState(false);
     const [dataToEdit, setDataToEdit] = useState(null);
 
-    const fetchPacientes = async () => {
-        const response = await ApiService.request('/pacientes');
-        setData(response);
-        setColumns(["nombres", "apellidos", "documento", "rh", "fecha_nacimiento"]);
-    };
+    const dispatch = useDispatch();
+    const pacientes = useSelector((state) => state.pacientes.pacientes);
+
+    const updateData = () => {
+        dispatch(fetchPacientes())
+        dispatch(fetchPacientesCounter())
+        dispatch(fetchPacientes())
+    }
+
     useEffect(() => {
-        fetchPacientes();
-    }, []);
+        updateData();
+        setColumns(["nombres", "apellidos", "documento", "rh", "fecha_nacimiento"]);
+    },[])
 
     const handleView = (item) => {
         setDataToEdit(item);
@@ -32,7 +41,7 @@ export default function TablePacientes() {
                 });
                 if (response) {
                     Alert.alert("Éxito", "Paciente eliminado correctamente");
-                    fetchPacientes();
+                    updateData();
                 }
             } catch (error) {
                 Alert.alert("Error", error.message || "Error al eliminar paciente");
@@ -62,13 +71,12 @@ export default function TablePacientes() {
 
                 const response = await ApiService.request(`/pacientes/${item.id}`, {
                     method: 'PUT',
-                    body: JSON.stringify(body)
-                    ,
+                    body: JSON.stringify(body),
                 });
 
                 if (response) {
                     Alert.alert("Éxito", "Paciente actualizado correctamente");
-                    fetchPacientes();
+                    updateData();
                 }
             } catch (error) {
                 Alert.alert("Error", error.message || "Error al actualizar paciente");
@@ -83,7 +91,7 @@ export default function TablePacientes() {
         <View style={{ flex: 1, padding: 20 }}>
             <TableDinamic
                 columns={columns}
-                data={data}
+                data={pacientes}
                 onView={handleView}
             />
 
