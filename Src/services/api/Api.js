@@ -269,43 +269,6 @@ class ApiService {
         return await this.request(`/doctores/${doctorId}/schedules`, { method: 'GET' });
     }
 
-    // Métodos para administradores
-    async countCitas() {
-        return await this.request('/countCitas', { method: 'GET' });
-    }
-
-    async countPacientes() {
-        return await this.request('/countPacientes', { method: 'GET' });
-    }
-
-    async countDoctores() {
-        return await this.request('/countDoctores', { method: 'GET' });
-    }
-
-    async countAdministradores() {
-        return await this.request('/countAdministradores', { method: 'GET' });
-    }
-
-    async countEspecialidades() {
-        return await this.request('/countEspecialidades', { method: 'GET' });
-    }
-
-    async countHorarios() {
-        return await this.request('/countHorarios', { method: 'GET' });
-    }
-
-    // Métodos para contadores de doctores
-    async countCitasAsignadas(doctorId) {
-        return await this.request(`/doctor/${doctorId}/count-citas-asignadas`, { method: 'GET' });
-    }
-
-    async countCitasProximas(doctorId) {
-        return await this.request(`/doctor/${doctorId}/count-citas-proximas`, { method: 'GET' });
-    }
-
-    async countPacientesAtendidos(doctorId) {
-        return await this.request(`/doctor/${doctorId}/count-pacientes-atendidos`, { method: 'GET' });
-    }
 
     // Métodos para doctores
     async getCitasDoctor() {

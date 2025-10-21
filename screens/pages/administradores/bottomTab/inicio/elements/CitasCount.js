@@ -1,30 +1,19 @@
 import Card from "../../../../../../components/cards/Card";
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {colors} from "../../../../../../utils/desing/Colors";
-import ApiService from "../../../../../../Src/services/api/Api";
+
+import {useDispatch, useSelector} from "react-redux";
+import {fetchCitasCounter} from "../../../../../../utils/slices/counters/CitasCounterSlice";
 
 let col = colors;
 
-
-
 const CitasCount = () => {
-    const [citasCount, setCitasCount] = useState(0);
+
+    const dispatch = useDispatch();
+    const citasCount = useSelector((state) => state.citasCounter.citasCount);
 
     useEffect(() => {
-        const fetchCitasCount = async () => {
-            try {
-                const response = await ApiService.countCitas();
-                if (response.total === undefined) {
-                    console.log(`no hay citas`);
-                    setCitasCount(0);
-                } else {
-                    setCitasCount(response.total);
-                }
-            } catch (error) {
-                console.error('Error fetching citas count:', error);
-            }
-        };
-        fetchCitasCount();
+        dispatch(fetchCitasCounter());
     }, []);
 
     return (

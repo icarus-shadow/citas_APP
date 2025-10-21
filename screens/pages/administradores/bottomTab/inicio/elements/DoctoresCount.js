@@ -1,35 +1,19 @@
 import Card from "../../../../../../components/cards/Card";
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {colors} from "../../../../../../utils/desing/Colors";
-import ApiService from "../../../../../../Src/services/api/Api";
+
+import {useDispatch, useSelector} from "react-redux";
+import {fetchDoctoresCounter} from "../../../../../../utils/slices/counters/DoctoresCounterSlice";
 
 let col = colors;
 
 const DoctoresCount = () => {
-    const [doctoresCount, setDoctoresCount] = useState(0);
+
+    const dispatch = useDispatch();
+    const doctoresCount = useSelector((state) => state.doctoresCounter.doctoresCount);
 
     useEffect(() => {
-        const fetchDoctoresCount = async () => {
-            try {
-                console.log('[DEBUG] DoctoresCount: Iniciando fetchDoctoresCount');
-                const response = await ApiService.countDoctores();
-                console.log('[DEBUG] DoctoresCount: Respuesta de API:', response);
-                if (response.total === undefined) {
-                    console.log(`[DEBUG] DoctoresCount: no hay doctores, response.total es undefined`);
-                    setDoctoresCount(0);
-                } else {
-                    console.log(`[DEBUG] DoctoresCount: Total doctores:`, response.total);
-                    setDoctoresCount(response.total);
-                }
-            } catch (error) {
-                console.error('[DEBUG] DoctoresCount: Error fetching doctores count:', error);
-                console.error('[DEBUG] DoctoresCount: Error message:', error.message);
-                console.error('[DEBUG] DoctoresCount: Error status:', error.status);
-                // En caso de error, mantener el estado en 0
-                setDoctoresCount(0);
-            }
-        };
-        fetchDoctoresCount();
+        dispatch(fetchDoctoresCounter());
     }, []);
 
     return (

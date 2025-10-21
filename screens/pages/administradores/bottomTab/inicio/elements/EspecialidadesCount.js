@@ -1,28 +1,19 @@
 import Card from "../../../../../../components/cards/Card";
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {colors} from "../../../../../../utils/desing/Colors";
-import ApiService from "../../../../../../Src/services/api/Api";
+
+import {useDispatch, useSelector} from "react-redux";
+import {fetchEspecialidadesCounter} from "../../../../../../utils/slices/counters/EspecialidadesCounterSlice";
 
 let col = colors;
 
 const EspecialidadesCount = () => {
-    const [especialidadesCount, setEspecialidadesCount] = useState(0);
+
+    const dispatch = useDispatch();
+    const especialidadesCount = useSelector((state) => state.especialidadesCounter.especialidadesCount);
 
     useEffect(() => {
-        const fetchEspecialidadesCount = async () => {
-            try {
-                const response = await ApiService.countEspecialidades();
-                if (response.total === undefined) {
-                    console.log(`no hay especialidades`);
-                    setEspecialidadesCount(0);
-                } else {
-                    setEspecialidadesCount(response.total);
-                }
-            } catch (error) {
-                console.error('Error fetching especialidades count:', error);
-            }
-        };
-        fetchEspecialidadesCount();
+        dispatch(fetchEspecialidadesCounter());
     }, []);
 
     return (

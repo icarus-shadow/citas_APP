@@ -17,7 +17,7 @@ const PacientesCount = () => {
 
     useEffect(() => {
         dispatch(fetchPacientesCounter());
-    })
+    }, []);
 
     return (
         <Card

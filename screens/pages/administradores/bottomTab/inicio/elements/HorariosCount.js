@@ -1,28 +1,19 @@
 import Card from "../../../../../../components/cards/Card";
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {colors} from "../../../../../../utils/desing/Colors";
-import ApiService from "../../../../../../Src/services/api/Api";
+
+import {useDispatch, useSelector} from "react-redux";
+import {fetchHorariosCounter} from "../../../../../../utils/slices/counters/HorariosCounterSlice";
 
 let col = colors;
 
 const HorariosCount = () => {
-    const [horariosCount, setHorariosCount] = useState(0);
+
+    const dispatch = useDispatch();
+    const horariosCount = useSelector((state) => state.horariosCounter.horariosCount);
 
     useEffect(() => {
-        const fetchHorariosCount = async () => {
-            try {
-                const response = await ApiService.countHorarios();
-                if (response.total === undefined) {
-                    console.log(`no hay horarios`);
-                    setHorariosCount(0);
-                } else {
-                    setHorariosCount(response.total);
-                }
-            } catch (error) {
-                console.error('Error fetching horarios count:', error);
-            }
-        };
-        fetchHorariosCount();
+        dispatch(fetchHorariosCounter());
     }, []);
 
     return (

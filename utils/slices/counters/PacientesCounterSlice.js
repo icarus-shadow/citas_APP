@@ -1,11 +1,11 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import ApiService from '../../../Src/services/api/Api';
+import Counters from "../../../Src/services/endpoints/counters/Counters";
 
 export const fetchPacientesCounter = createAsyncThunk(
     'pacientesCounter/fetchCitasCounter',
     async (_, { rejectWithValue }) => {
         try{
-            const response = await ApiService.countPacientes();
+            const response = await Counters.countPacientes();
             const count = response.count || response.total || 0;
             return count;
         } catch (error) {
@@ -47,8 +47,3 @@ const pacientesCounterSlice = createSlice({
 
 export default pacientesCounterSlice.reducer;
 
-export const selectPacientesCounter = (state) => state.pacientesCounter;
-export const selectPacientesCount = (state) => state.pacientesCounter.pacientesCount;
-export const selectPacientesCounterLoading = (state) => state.pacientesCounter.isLoading;
-export const selectPacientesCounterError = (state) => state.pacientesCounter.error;
-export const selectPacientesCounterLastUpdated = (state) => state.pacientesCounter.lastUpdated;

@@ -1,28 +1,19 @@
 import Card from "../../../../../../components/cards/Card";
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {colors} from "../../../../../../utils/desing/Colors";
-import ApiService from "../../../../../../Src/services/api/Api";
+
+import {useDispatch, useSelector} from "react-redux";
+import {fetchAdministradoresCounter} from "../../../../../../utils/slices/counters/AdministradoresCounterSlice";
 
 let col = colors;
 
 const AdministradoresCount = () => {
-    const [administradoresCount, setAdministradoresCount] = useState(0);
+
+    const dispatch = useDispatch();
+    const administradoresCount = useSelector((state) => state.administradoresCounter.administradoresCount);
 
     useEffect(() => {
-        const fetchAdministradoresCount = async () => {
-            try {
-                const response = await ApiService.countAdministradores();
-                if (response.total === undefined) {
-                    console.log(`no hay administradores`);
-                    setAdministradoresCount(0);
-                } else {
-                    setAdministradoresCount(response.total);
-                }
-            } catch (error) {
-                console.error('Error fetching administradores count:', error);
-            }
-        };
-        fetchAdministradoresCount();
+        dispatch(fetchAdministradoresCounter());
     }, []);
 
     return (
