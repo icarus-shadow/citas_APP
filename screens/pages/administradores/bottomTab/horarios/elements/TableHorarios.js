@@ -1,12 +1,12 @@
 import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import {View, Alert, ScrollView, TouchableOpacity, Text, StyleSheet} from 'react-native';
-import { useDispatch } from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import TableDinamic from "../../../../../../components/TableDinamic";
 import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCard from "../../../../../../components/cards/InfoCard";
 import DynamicFormModal from "../../../../../../components/modals/DynamicFormModal";
 
-const TableHorarios = forwardRef(function TableHorarios({ horarios, refreshHorarios }, ref) {
+const TableHorarios = forwardRef(function TableHorarios({ horarios }, ref) {
     useImperativeHandle(ref, () => ({
         refreshHorarios
     }));
@@ -15,30 +15,16 @@ const TableHorarios = forwardRef(function TableHorarios({ horarios, refreshHorar
     const [visible, setVisible] = useState(false);
     const [dataToEdit, setDataToEdit] = useState(null);
     const [assignModalVisible, setAssignModalVisible] = useState(false);
-    const [doctors, setDoctors] = useState([]);
     const [selectedHorario, setSelectedHorario] = useState(null);
 
+    const doctors = useSelector((state) => state.doctores.doctores);
 
-    const fetchDoctors = async () => {
-        try {
-            const response = await ApiService.request('/doctores');
-            setDoctors(response || []);
-        } catch (error) {
-            console.error('Error fetching doctors:', error);
-            setDoctors([]);
-        }
-    };
-
-    useEffect(() => {
-        fetchDoctors();
-    }, []);
 
     const handleView = (item) => {
         if (!item || !item.id) {
             Alert.alert("Error", "No se puede mostrar: datos inválidos");
             return;
         }
-
         setDataToEdit(item);
         setVisible(true);
     };

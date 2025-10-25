@@ -15,9 +15,6 @@ const PacientesCount = () => {
     const dispatch = useDispatch();
     const pacientesCount = useSelector((state) => state.pacientesCounter.pacientesCount);
 
-    useEffect(() => {
-        dispatch(fetchPacientesCounter());
-    }, []);
 
     return (
         <Card

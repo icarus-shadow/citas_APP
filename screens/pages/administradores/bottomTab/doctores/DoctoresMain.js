@@ -1,5 +1,5 @@
 import {View, Text, StyleSheet, Alert, ScrollView} from 'react-native';
-import {useSelector} from "react-redux";
+import {useSelector, useDispatch} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import Add from "../../../../../components/Buttons/Add";
 import CountCard from "../../../../../components/cards/CountCard";
@@ -7,6 +7,8 @@ import {useEffect, useState} from "react";
 import ApiService from "../../../../../Src/services/api/Api";
 import TableDoctores from "./elements/TableDoctores";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
+import {fetchDoctores} from "../../../../../utils/slices/data/DoctoresSlice";
+import {fetchDoctoresCounter} from "../../../../../utils/slices/counters/DoctoresCounterSlice";
 
 let col = colors;
 
@@ -14,12 +16,19 @@ let col = colors;
 export default function DoctoresMain() {
     const isDark = useSelector((state) => state.darkMode.value);
     isDark ? (col = colors) : (col = darkColors);
+    const dispatch = useDispatch();
+    const doctoresCount  = useSelector((state) => state.doctoresCounter.doctoresCount);
+    const especialidades = useSelector((state) => state.especialidades.especialidades);
+    const horarios       = useSelector((state) => state.horarios.horarios);
 
-    const [doctoresCount, setDoctoresCount] = useState(0);
     const [modalVisible, setModalVisible] = useState(false);
-    const [especialidades, setEspecialidades] = useState([]);
-    const [horarios, setHorarios] = useState([]);
     const [formFields, setFormFields] = useState([]);
+
+    const actualizarInfo = () => {
+      dispatch(fetchDoctores());
+      dispatch(fetchDoctoresCounter());
+      dispatch(fetchDoctores());
+    }
 
     useEffect(() => {
         setFormFields([
@@ -48,53 +57,12 @@ export default function DoctoresMain() {
             {name: 'lugar_trabajo', label: 'Lugar de Trabajo', type: 'text'},
         ]);
     }, [especialidades, horarios]);
-    const fetchDoctoresCount = async () => {
-        try {
-            const response = await ApiService.request('/countDoctores');
-            if (response.total === undefined) {
-                console.log(`no hay doctores`);
-                setDoctoresCount(0);
-            } else {
-                setDoctoresCount(response.total);
-            }
-        } catch (error) {
-            console.error('Error fetching doctores count:', error);
-        }
-    };
-
-    const fetchEspecialidades = async () => {
-        try {
-            const response = await ApiService.request('/especialidades');
-            setEspecialidades(response);
-        } catch (error) {
-            console.error('Error fetching especialidades:', error);
-        }
-    };
-
-    const fetchHorarios = async () => {
-        try {
-            const response = await ApiService.request('/horarios');
-            setHorarios(response);
-        } catch (error) {
-            console.error('Error fetching horarios:', error);
-        }
-    };
-
-    useEffect(() => {
-        fetchDoctoresCount();
-        fetchEspecialidades();
-        fetchHorarios();
-    }, []);
-
-    const handleNewPaciente = () => {
+    const handleNewDoctor = () => {
         setModalVisible(true);
     }
-
     const handleCancel = () => {
         setModalVisible(false);
-        console.log("cancel");
     }
-
     const handleSubmit = async (formData) => {
         try {
             const userData = {
@@ -119,7 +87,7 @@ export default function DoctoresMain() {
             if (response.doctor) {
                 setModalVisible(false);
                 Alert.alert("Éxito", "Doctor registrado correctamente");
-                fetchDoctoresCount();
+                actualizarInfo();
             }
         } catch (error) {
             if (error.conflictos && error.conflictos.length > 0) {
@@ -145,7 +113,7 @@ export default function DoctoresMain() {
 
             <View style={{ flex: 1, backgroundColor: col.background}}>
                 <View style={styles.container(col)}>
-                    <Add onPressed={handleNewPaciente}/>
+                    <Add onPressed={handleNewDoctor}/>
                     <CountCard title="Doctores" number={doctoresCount} />
                 </View>
                 <TableDoctores />

@@ -12,9 +12,6 @@ const CitasCount = () => {
     const dispatch = useDispatch();
     const citasCount = useSelector((state) => state.citasCounter.citasCount);
 
-    useEffect(() => {
-        dispatch(fetchCitasCounter());
-    }, []);
 
     return (
         <Card

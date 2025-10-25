@@ -1,5 +1,5 @@
 import {View, Text, StyleSheet, Alert, ScrollView} from 'react-native';
-import {useSelector} from "react-redux";
+import {useSelector, useDispatch} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import Add from "../../../../../components/Buttons/Add";
 import CountCard from "../../../../../components/cards/CountCard";
@@ -7,6 +7,8 @@ import {useEffect, useState, useRef} from "react";
 import ApiService from "../../../../../Src/services/api/Api";
 import TableHorarios from "./elements/TableHorarios";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
+import {fetchHorarios} from "../../../../../utils/slices/data/HorariosSlice";
+import {fetchHorariosCounter} from "../../../../../utils/slices/counters/HorariosCounterSlice";
 
 let col = colors;
 
@@ -14,10 +16,12 @@ let col = colors;
 export default function HorariosMain() {
     const isDark = useSelector((state) => state.darkMode.value);
     isDark ? (col = colors) : (col = darkColors);
+    const dispatch = useDispatch();
+
+    const horarios = useSelector((state) => state.horarios.horarios);
+    const horariosCount = useSelector((state) => state.horariosCounter.horariosCount);
 
     const tableRef = useRef();
-    const [horariosCount, setHorariosCount] = useState(0);
-    const [horarios, setHorarios] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const formFields = [
         {name: 'nombre', label: 'Nombre del Horario', type: 'text', required: true},
@@ -40,35 +44,14 @@ export default function HorariosMain() {
         {name: 'hora_inicio', label: 'Hora Inicio', type: 'time', required: true},
         {name: 'hora_fin', label: 'Hora Fin', type: 'time', required: true},
     ];
-    const fetchHorariosCount = async () => {
-        try {
-            const response = await ApiService.request('/countHorarios');
-            if (response.total === undefined) {
-                console.log(`no hay horarios`);
-                setHorariosCount(0);
-            } else {
-                setHorariosCount(response.total);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    };
-    const fetchHorarios = async () => {
-        try {
-            console.log('[DEBUG] HorariosMain: Iniciando fetchHorarios');
-            const response = await ApiService.request('/horarios');
-            console.log('[DEBUG] HorariosMain: Respuesta de API /horarios:', response);
-            setHorarios(response);
-        } catch (error) {
-            console.error('[DEBUG] HorariosMain: Error fetching horarios:', error);
-            console.error('[DEBUG] HorariosMain: Error message:', error.message);
-            console.error('[DEBUG] HorariosMain: Error status:', error.status);
-            setHorarios([]); // En caso de error, setear array vacío
-        }
-    };
+
+    const actualizarInfo = () => {
+      dispatch(fetchHorarios());
+      dispatch(fetchHorariosCounter());
+    }
+
     useEffect(() => {
-        fetchHorarios();
-        fetchHorariosCount();
+        actualizarInfo();
     }, []);
 
     const handleNewHorario = () => {
@@ -77,11 +60,9 @@ export default function HorariosMain() {
 
     const handleCancel = () => {
         setModalVisible(false);
-        console.log("cancel");
     }
 
     const handleSubmit = async (formData) => {
-        console.log('[DEBUG] handleSubmit formData:', formData);
         try {
             const horarioData = {
                 nombre: formData.nombre,
@@ -98,7 +79,7 @@ export default function HorariosMain() {
                 setModalVisible(false);
                 Alert.alert("Éxito", "Plantilla de horario registrada correctamente");
                 tableRef.current.refreshHorarios();
-                fetchHorariosCount();
+                actualizarInfo();
             }
         } catch (error) {
             Alert.alert("Error", error.message || "Error al registrar plantilla de horario");
@@ -114,7 +95,7 @@ export default function HorariosMain() {
                     <Add onPressed={handleNewHorario}/>
                     <CountCard title="Horarios" number={horariosCount} />
                 </View>
-                <TableHorarios ref={tableRef} horarios={horarios} refreshHorarios={fetchHorarios} />
+                <TableHorarios ref={tableRef} horarios={horarios} refreshHorarios={actualizarInfo()} />
                 <DynamicFormModal
                     visible={modalVisible}
                     onCloses={handleCancel}

@@ -12,9 +12,6 @@ const HorariosCount = () => {
     const dispatch = useDispatch();
     const horariosCount = useSelector((state) => state.horariosCounter.horariosCount);
 
-    useEffect(() => {
-        dispatch(fetchHorariosCounter());
-    }, []);
 
     return (
         <Card

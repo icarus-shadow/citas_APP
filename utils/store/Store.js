@@ -15,6 +15,9 @@ import pacientesAtendidosCounterReducer from '../slices/counters/PacientesAtendi
 
 // data
 import pacientesReducer from '../slices/data/PacientesSlice'
+import doctoresReducer from '../slices/data/DoctoresSlice'
+import especialidadesReducer from '../slices/data/EspecialidadesSlice'
+import horariosReducer from '../slices/data/HorariosSlice'
 
 export const store = configureStore({
     reducer: {
@@ -33,5 +36,8 @@ export const store = configureStore({
 
         // data
         pacientes: pacientesReducer,
+        doctores: doctoresReducer,
+        especialidades: especialidadesReducer,
+        horarios: horariosReducer,
     },
 });

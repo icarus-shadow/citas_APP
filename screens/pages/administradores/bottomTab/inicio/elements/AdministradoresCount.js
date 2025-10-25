@@ -12,10 +12,6 @@ const AdministradoresCount = () => {
     const dispatch = useDispatch();
     const administradoresCount = useSelector((state) => state.administradoresCounter.administradoresCount);
 
-    useEffect(() => {
-        dispatch(fetchAdministradoresCounter());
-    }, []);
-
     return (
         <Card
             title={`Administradores`}

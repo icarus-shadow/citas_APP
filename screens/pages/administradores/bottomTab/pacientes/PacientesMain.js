@@ -48,10 +48,6 @@ export default function PacientesMain() {
         dispatch(fetchPacientes())
     }
 
-    useEffect(() => {
-        actualizarInformacion();
-    }, []);
-
     const handleNewPaciente = () => {
         setModalVisible(true);
     }

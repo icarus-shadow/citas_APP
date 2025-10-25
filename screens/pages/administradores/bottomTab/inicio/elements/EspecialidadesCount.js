@@ -12,9 +12,6 @@ const EspecialidadesCount = () => {
     const dispatch = useDispatch();
     const especialidadesCount = useSelector((state) => state.especialidadesCounter.especialidadesCount);
 
-    useEffect(() => {
-        dispatch(fetchEspecialidadesCounter());
-    }, []);
 
     return (
         <Card

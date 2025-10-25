@@ -29,7 +29,6 @@ export default function DynamicFormModal({
     const col = isDark ? colors : darkColors;
 
     useEffect(() => {
-        console.log('[DynamicFormModal] Resetting formData due to fields change');
         setFormData(initialState);
     }, [fields]);
 

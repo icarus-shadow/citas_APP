@@ -68,6 +68,7 @@ class ApiService {
         }
     }
 
+    // manejo de tokens
     async getToken() {
         try {
             return await AsyncStorage.getItem(TOKEN_KEY);
@@ -75,7 +76,6 @@ class ApiService {
             return null;
         }
     }
-
     async setToken(token) {
         try {
             await AsyncStorage.setItem(TOKEN_KEY, token);
@@ -83,7 +83,6 @@ class ApiService {
             console.error(`[API] Error al guardar token: ${error}`);
         }
     }
-
     async removeToken() {
         try {
             await AsyncStorage.removeItem(TOKEN_KEY);
@@ -93,22 +92,19 @@ class ApiService {
         }
     }
 
-    // Endpoints
+    // Endpoints Autenticacion
     async login(data) {
         const response = await this.request('/login', {
             method: 'POST',
             body: JSON.stringify(data),
         });
-        
 
         if (response.access_token) {
             await this.setToken(response.access_token);
             await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.user));
         }
-
         return { token: response.access_token, user: response.user };
     }
-
     async register(data) {
         console.log(`[API | register] DATA: ${JSON.stringify(data)}`);
         const response = await this.request('/registrar-paciente', {
@@ -117,39 +113,19 @@ class ApiService {
         });
         return response;
     }
-
     async getCurrentUser() {
         return await this.request('/user', { method: 'GET' });
     }
-    /**
-     * Obtiene la información completa de un usuario por su ID.
-     * @param {number|string} id - ID del usuario a consultar.
-     * @returns {Promise<Object>} Promesa que resuelve con el objeto del usuario.
-     * @throws {Error} Si el usuario no existe (404) o hay errores de autenticación/autorización.
-     */
     async getUserById(id) {
         return await this.request(`/users/${id}`, { method: 'GET' });
     }
-
-
-
     async logout() {
         await this.removeToken();
         await AsyncStorage.removeItem(USER_KEY);
         return true;
     }
 
-
-    async getPaciente() {
-        return await this.request('/mi-perfil', { method: 'GET' });
-    }
-    async getDoctor() {
-        return await this.request('/mi-perfil-doctor', { method: 'GET' });
-    }
-    async getAdmin() {
-        return await this.request('/mi-perfil-admin', { method: 'GET' });
-    }
-
+    // manejo perfil
     async changePassword(data) {
         try {
             const response = await this.request('/change-password', {
@@ -168,7 +144,6 @@ class ApiService {
             throw new Error(errorMessage);
         }
     }
-
     async deleteAccount(data) {
         try {
             const response = await this.request('/delete-account', {
@@ -182,6 +157,17 @@ class ApiService {
             const errorMessage = error.message || 'Error al eliminar la cuenta';
         }
     }
+
+    async getPaciente() {
+        return await this.request('/mi-perfil', { method: 'GET' });
+    }
+    async getDoctor() {
+        return await this.request('/mi-perfil-doctor', { method: 'GET' });
+    }
+    async getAdmin() {
+        return await this.request('/mi-perfil-admin', { method: 'GET' });
+    }
+
 
     // Métodos para pacientes
     async updatePaciente(data) {

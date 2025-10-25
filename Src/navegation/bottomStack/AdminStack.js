@@ -1,9 +1,9 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { View } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { colors, darkColors } from "../../../utils/desing/Colors";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import SlidingTopScreen from "../../../components/SlidingTopScreen";
 
 import InicioMain from "../../../screens/pages/administradores/bottomTab/inicio/InicioMain";
@@ -17,12 +17,23 @@ import ConfiguracionMain from "../../../screens/pages/commonPages/topTab/configu
 import PerfilMain from "../../../screens/pages/commonPages/topTab/perfil/PerfilMain";
 
 import ScreenWithTab from "../ScreenWithTab";
+import {fetchPacientes} from "../../../utils/slices/data/PacientesSlice";
+import {fetchDoctores} from "../../../utils/slices/data/DoctoresSlice";
+import {fetchEspecialidades} from "../../../utils/slices/data/EspecialidadesSlice";
+import {fetchHorarios} from "../../../utils/slices/data/HorariosSlice";
+import {fetchAdministradoresCounter} from "../../../utils/slices/counters/AdministradoresCounterSlice";
+import {fetchCitasCounter} from "../../../utils/slices/counters/CitasCounterSlice";
+import {fetchDoctoresCounter} from "../../../utils/slices/counters/DoctoresCounterSlice";
+import {fetchEspecialidadesCounter} from "../../../utils/slices/counters/EspecialidadesCounterSlice";
+import {fetchHorariosCounter} from "../../../utils/slices/counters/HorariosCounterSlice";
+import {fetchPacientesCounter} from "../../../utils/slices/counters/PacientesCounterSlice";
 
 const Stack = createNativeStackNavigator();
 
 export default function AdminStack() {
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? colors : darkColors;
+    const dispatch = useDispatch();
 
     const tabs = [
         { key: "Inicio", icon: "home", label: "Inicio", route: "Inicio" },
@@ -32,6 +43,19 @@ export default function AdminStack() {
         { key: "Horarios", icon: "calendar", label: "Horarios", route: "Horarios" },
         { key: "Notificaciones", icon: "notifications", label: "Notificaciones", route: "Notificaciones" },
     ];
+
+    useEffect(() => {
+        dispatch(fetchPacientes());
+        dispatch(fetchDoctores());
+        dispatch(fetchEspecialidades());
+        dispatch(fetchHorarios());
+        dispatch(fetchAdministradoresCounter());
+        dispatch(fetchCitasCounter());
+        dispatch(fetchDoctoresCounter());
+        dispatch(fetchEspecialidadesCounter());
+        dispatch(fetchHorariosCounter());
+        dispatch(fetchPacientesCounter());
+    }, []);
 
     return (
         <SafeAreaProvider>
