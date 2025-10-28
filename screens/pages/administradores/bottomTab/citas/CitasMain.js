@@ -67,9 +67,10 @@ export default function CitasMain() {
         {
             type: 'custom',
             component: AppointmentSlotSelector,
-            props: {
+            props: (formData) => ({
+                formData,
                 onSlotsSelected: setSelectedSlots
-            }
+            })
         },
         {name: 'lugar', label: 'Lugar', type: 'text', required: true, maxLength: 255},
         {name: 'motivo', label: 'Motivo', type: 'text', required: true, maxLength: 255},

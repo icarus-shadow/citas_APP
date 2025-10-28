@@ -23,6 +23,32 @@ export default function TableCitasAdmin() {
     const pacientes = useSelector((state) => state.pacientes.pacientes);
     const citas = useSelector((state) => state.citas.citas);
 
+    const fetchPacientes = async () => {
+        try {
+            const response = await ApiService.request('/pacientes');
+            const formattedOptions = response.map(p => ({
+                value: p.id.toString(),
+                label: `${p.nombres} ${p.apellidos}`
+            }));
+            setPacientesOptions(formattedOptions);
+        } catch (error) {
+            console.error('Error al obtener pacientes:', error);
+        }
+    };
+
+    const fetchDoctores = async () => {
+        try {
+            const response = await ApiService.request('/doctores');
+            const formattedOptions = response.map(d => ({
+                value: d.id.toString(),
+                label: `${d.nombres} ${d.apellidos}`
+            }));
+            setDoctoresOptions(formattedOptions);
+        } catch (error) {
+            console.error('Error al obtener doctores:', error);
+        }
+    };
+
     const completeCitas = async () => {
         const citasConNombres = citas.map(cita => ({
             ...cita,
@@ -46,6 +72,11 @@ export default function TableCitasAdmin() {
     }
 
     useEffect(() => {
+        fetchPacientes();
+        fetchDoctores();
+    }, []);
+
+    useEffect(() => {
         completeCitas()
     }, [citas]);
 
@@ -57,7 +88,13 @@ export default function TableCitasAdmin() {
 
 
     const handleView = (item) => {
-        setDataToEdit(item);
+        // Crear objeto con IDs para InfoCard
+        const dataForCard = {
+            ...item,
+            paciente: item.id_paciente,
+            doctor: item.id_doctor,
+        };
+        setDataToEdit(dataForCard);
         setVisible(true);
     };
 

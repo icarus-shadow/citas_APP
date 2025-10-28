@@ -91,6 +91,7 @@ export default function CitasMain() {
                 type: 'custom',
                 component: AppointmentSlotSelector,
                 props: (formData) => ({
+                    formData,
                     onSlotsSelected: setSelectedSlots
                 })
             },

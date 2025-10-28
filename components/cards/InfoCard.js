@@ -2,11 +2,15 @@ import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from '@react-native-picker/picker';
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { colors, darkColors } from "../../utils/desing/Colors";
 import ApiService from "../../Src/services/api/Api";
 import DateSlotSelectorModal from "../modals/DateSlotSelectorModal";
 import DatePickerComponent from "../DatePickerComponent";
+import { selectPacienteById } from "../../utils/slices/data/PacientesSlice";
+import { selectDoctorById } from "../../utils/slices/data/DoctoresSlice";
+import { fetchCitas } from "../../utils/slices/data/CitasSlice";
+import { fetchCitasCounter } from "../../utils/slices/counters/CitasCounterSlice";
 
 const InfoCard = ({
     data,
@@ -52,14 +56,14 @@ const InfoCard = ({
     const [originalValues, setOriginalValues] = useState({});
     const localSelectFields = useMemo(() => {
         const newFields = { ...selectFields };
-        if (pacienteOptions.length > 0) {
+        if (pacienteOptions && Array.isArray(pacienteOptions) && pacienteOptions.length > 0) {
             newFields.paciente = {
-                options: pacienteOptions.map(p => ({ value: p.id, label: `${p.nombres} ${p.apellidos}` }))
+                options: pacienteOptions
             };
         }
-        if (doctorOptions.length > 0) {
+        if (doctorOptions && Array.isArray(doctorOptions) && doctorOptions.length > 0) {
             newFields.doctor = {
-                options: doctorOptions.map(d => ({ value: d.id, label: `${d.nombres} ${d.apellidos}` }))
+                options: doctorOptions
             };
         }
         if (fieldsToShow.includes('genero')) {
@@ -73,9 +77,12 @@ const InfoCard = ({
         return newFields;
     }, [selectFields, pacienteOptions, doctorOptions, fieldsToShow]);
 
+    const dispatch = useDispatch();
     const isDark = useSelector((state) => state.darkMode.value);
-    const col = isDark ? colors : darkColors;
+    const pacientes = useSelector((state) => state.pacientes.pacientes);
+    const doctores = useSelector((state) => state.doctores.doctores);
 
+    const col = isDark ? colors : darkColors;
     useEffect(() => {
         // Initialize values with IDs for select fields
         const initialValues = { ...data };
@@ -114,7 +121,7 @@ const InfoCard = ({
 
     // Filter available horarios (exclude already assigned ones)
     const availableHorariosFiltered = useMemo(() => {
-        if (availableHorarios.length > 0) {
+        if (availableHorarios && Array.isArray(availableHorarios) && availableHorarios.length > 0) {
             const assignedIds = assignedHorarios.map(h => h.id);
             return availableHorarios.filter(h => !assignedIds.includes(h.id));
         }
@@ -195,6 +202,9 @@ const InfoCard = ({
             if (onSave) {
                 saveResult = await onSave({ ...values, horarios_asignados: assignedHorarios });
             }
+
+            // Refresh citas data
+            dispatch(fetchCitas());
 
             // Close the modal only if save was successful
             if (saveResult !== false) {
@@ -319,7 +329,11 @@ const InfoCard = ({
                                 <Text style={styles.initialsText(col)}>{initials}</Text>
                             </View>
                         </View>
-                        <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+                        <TouchableOpacity onPress={() => {
+                            onDelete();
+                            dispatch(fetchCitas());
+                            dispatch(fetchCitasCounter());
+                        }} style={styles.deleteButton}>
                             <Ionicons name="trash" size={24} color={col.error} />
                         </TouchableOpacity>
                     </View>
@@ -336,7 +350,19 @@ const InfoCard = ({
                                             <View style={styles.inputContainer}>
                                                 {key === 'doctor' && !editStates[key] ? (
                                                     <Text style={styles.textInput(col, editStates[key])}>
-                                                        {data.doctor ? `${data.doctor.nombres} ${data.doctor.apellidos}` : 'Sin doctor'}
+                                                        {(() => {
+                                                            const doctorId = values.doctor || data.doctor?.id;
+                                                            const doctor = selectDoctorById(doctorId)({ doctores: { doctores } });
+                                                            return doctor ? `${doctor.nombres} ${doctor.apellidos}` : 'Sin doctor';
+                                                        })()}
+                                                    </Text>
+                                                ) : key === 'paciente' && !editStates[key] ? (
+                                                    <Text style={styles.textInput(col, editStates[key])}>
+                                                        {(() => {
+                                                            const pacienteId = values.paciente || data.paciente?.id;
+                                                            const paciente = selectPacienteById(pacienteId)({ pacientes: { pacientes } });
+                                                            return paciente ? `${paciente.nombres} ${paciente.apellidos}` : 'Sin paciente';
+                                                        })()}
                                                     </Text>
                                                 ) : isSelect ? (
                                                     editStates[key] ? (
@@ -373,15 +399,14 @@ const InfoCard = ({
                                                     <Text style={styles.textInput(col, editStates[key])}>
                                                         {values.genero === 'M' ? 'Masculino' : values.genero === 'F' ? 'Femenino' : 'No especificado'}
                                                     </Text>
+                                                ) : key === 'hora_cita' ? (
+                                                    <Text style={styles.textInput(col, false)}>{values?.[key]?.toString()}</Text>
                                                 ) : (
                                                     <TextInput
                                                         editable={!!editStates[key]}
                                                         value={(() => {
                                                             const val = values?.[key]?.toString();
                                                             console.log(`[InfoCard] key: ${key}, value:`, values?.[key], `type: ${typeof values?.[key]}, toString: ${val}`);
-                                                            if (key === 'paciente') {
-                                                                console.log(`[InfoCard] Nombre del paciente mostrado: ${val}`);
-                                                            }
                                                             return val;
                                                         })()}
                                                         onChangeText={(val) => handleChange(key, val)}
@@ -391,8 +416,18 @@ const InfoCard = ({
                                                     />
                                                 )}
                                                 {errors[key] && <Text style={styles.errorText(col)}>{errors[key]}</Text>}
-                                                {!readOnlyFields.includes(key) && (
-                                                    <TouchableOpacity onPress={() => toggleEdit(key)} style={styles.editButton(col)}>
+                                                {!readOnlyFields.includes(key) && key !== 'hora_cita' && (
+                                                    <TouchableOpacity
+                                                        onPress={() => {
+                                                            if (key === 'fecha_cita') {
+                                                                setShowDateSlotModal(true);
+                                                                setSelectedDoctor(data.id_doctor);
+                                                            } else {
+                                                                toggleEdit(key);
+                                                            }
+                                                        }}
+                                                        style={styles.editButton(col)}
+                                                    >
                                                         <Ionicons
                                                             name={editStates[key] ? "lock-closed" : "create"}
                                                             size={20}

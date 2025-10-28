@@ -24,7 +24,7 @@ const DateSlotSelectorModal = ({ visible, onClose, doctorId, onSelectSlot }) => 
     const fetchSlots = async () => {
         setLoading(true);
         try {
-            const slots = await ApiService.getAvailableSlots(doctorId, selectedDate, selectedDate);
+            const slots = await ApiService.getSlotsByDate(doctorId, selectedDate);
             setAvailableSlots(slots);
         } catch (error) {
             Alert.alert('Error', 'No se pudieron cargar los slots disponibles');
@@ -38,15 +38,32 @@ const DateSlotSelectorModal = ({ visible, onClose, doctorId, onSelectSlot }) => 
         setDatePickerVisible(false);
         if (selectedDate) {
             setTempDate(selectedDate);
-            const formattedDate = selectedDate.toISOString().split('T')[0];
+            // Formatear fecha en formato YYYY-MM-DD sin zona horaria
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
             setSelectedDate(formattedDate);
             setAvailableSlots([]);
         }
     };
 
-    const handleSlotSelect = (slot) => {
-        onSelectSlot(selectedDate, slot.hora_inicio);
-        onClose();
+    const handleSlotSelect = async (slot) => {
+        try {
+            // Validar slot en tiempo real antes de seleccionar
+            const validation = await ApiService.validateSlot(doctorId, selectedDate || '', slot.hora_inicio);
+            if (!validation.available) {
+                Alert.alert('Slot no disponible', 'Este horario ya ha sido reservado. Por favor selecciona otro.');
+                // Recargar slots para actualizar disponibilidad
+                fetchSlots();
+                return;
+            }
+            onSelectSlot(selectedDate || '', slot.hora_inicio);
+            onClose();
+        } catch (error) {
+            console.error('[DateSlotSelectorModal] Error validando slot:', error.message);
+            Alert.alert('Error', 'No se pudo validar la disponibilidad del horario');
+        }
     };
 
     return (

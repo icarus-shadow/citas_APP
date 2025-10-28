@@ -31,20 +31,33 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
         try {
             console.log(`[AppointmentSlotSelector] Obteniendo slots disponibles para doctor ${selectedDoctor} en fecha ${selectedDate.toISOString().split('T')[0]}`);
 
-            // Formatear fecha para la API
-            const dateStr = selectedDate.toISOString().split('T')[0];
-            const slotsResponse = await ApiService.getAvailableSlots(selectedDoctor, dateStr, dateStr);
+            // Formatear fecha para la API en formato YYYY-MM-DD sin zona horaria
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+            const slotsResponse = await ApiService.getSlotsByDate(selectedDoctor, dateStr);
+            console.log(`[AppointmentSlotSelector] Slots obtenidos:`, slotsResponse);
+
+            // Validar que slotsResponse sea un array
+            if (!Array.isArray(slotsResponse)) {
+                console.error('[AppointmentSlotSelector] slotsResponse no es un array:', slotsResponse);
+                setError('Error en la respuesta del servidor: formato de datos inválido');
+                setSlots([]);
+                return;
+            }
+
             console.log(`[AppointmentSlotSelector] Slots obtenidos: ${slotsResponse.length}`);
 
             // Procesar slots disponibles
             const processedSlots = slotsResponse.map(slot => ({
                 id: slot.id,
-                fecha: slot.fecha,
+                fecha: slot.fecha || '',
                 hora_inicio: slot.hora_inicio,
                 hora_fin: slot.hora_fin,
                 disponible: slot.disponible,
                 ocupado: !slot.disponible,
-                key: `${slot.fecha}-${slot.hora_inicio}`
+                key: `${slot.fecha || ''}-${slot.hora_inicio}`
             }));
 
             // Ordenar por hora
@@ -101,7 +114,11 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
 
         // Validar slot en tiempo real
         try {
-            const dateStr = selectedDate.toISOString().split('T')[0];
+            // Formatear fecha para la API en formato YYYY-MM-DD sin zona horaria
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
             const validation = await ApiService.validateSlot(selectedDoctor, dateStr, slot.hora_inicio);
             if (!validation.available) {
                 Alert.alert('Slot no disponible', 'Este horario ya ha sido reservado. Por favor selecciona otro.');

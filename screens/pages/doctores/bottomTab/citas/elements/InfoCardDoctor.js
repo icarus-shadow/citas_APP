@@ -402,6 +402,13 @@ const InfoCardDoctor = ({
                                                             })()}
                                                         </Text>
                                                     )
+                                                ) : key === 'hora_cita' ? (
+                                                    <Text style={styles.informationalText(col)}>
+                                                        {(() => {
+                                                            const val = values?.[key]?.toString();
+                                                            return val || `Ingrese ${key}`;
+                                                        })()}
+                                                    </Text>
                                                 ) : !editStates[key] ? (
                                                     <Text style={styles.textInput(col, editStates[key])}>
                                                         {(() => {
@@ -412,7 +419,7 @@ const InfoCardDoctor = ({
                                                     </Text>
                                                 ) : (
                                                     <TextInput
-                                                        editable={key === 'hora_cita' ? false : true}
+                                                        editable={true}
                                                         value={(() => {
                                                             const val = values?.[key]?.toString();
                                                             console.log(`[InfoCardDoctor] key: ${key}, value:`, values?.[key], `type: ${typeof values?.[key]}, toString: ${val}`);
@@ -656,6 +663,13 @@ const styles = StyleSheet.create({
         color: col.text,
         borderBottomWidth: isEditing ? 2 : 1,
         borderColor: isEditing ? col.primary : col.textResalt,
+        paddingVertical: 8,
+        paddingHorizontal: 0,
+    }),
+    informationalText: (col) => ({
+        flex: 1,
+        fontSize: 16,
+        color: col.text,
         paddingVertical: 8,
         paddingHorizontal: 0,
     }),

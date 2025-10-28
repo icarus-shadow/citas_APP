@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { colors, darkColors } from '../../utils/desing/Colors';
 import ApiService from '../../Src/services/api/Api';
 
-const DateMultiSlotSelectorModal = ({ visible, onClose, onSelectSlots, fetchSlots: externalFetchSlots }) => {
+const DateMultiSlotSelectorModal = ({ visible, onClose, onSelectSlots, fetchSlots: externalFetchSlots, doctorId }) => {
     const [selectedDate, setSelectedDate] = useState('');
     const [availableSlots, setAvailableSlots] = useState([]);
     const [selectedSlots, setSelectedSlots] = useState([]);
@@ -29,6 +29,9 @@ const DateMultiSlotSelectorModal = ({ visible, onClose, onSelectSlots, fetchSlot
             if (externalFetchSlots) {
                 // Use external fetch function if provided
                 daySlots = await externalFetchSlots(selectedDate);
+            } else if (doctorId) {
+                // Use new endpoint with doctor ID
+                daySlots = await ApiService.getSlotsByDate(doctorId, selectedDate);
             } else {
                 // Fallback to internal implementation
                 const slots = await ApiService.getMisHorarios();
@@ -49,23 +52,43 @@ const DateMultiSlotSelectorModal = ({ visible, onClose, onSelectSlots, fetchSlot
         setDatePickerVisible(false);
         if (selectedDate) {
             setTempDate(selectedDate);
-            const formattedDate = selectedDate.toISOString().split('T')[0];
+            // Formatear fecha en formato YYYY-MM-DD sin zona horaria
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
             setSelectedDate(formattedDate);
             setSelectedSlots([]); // Reset selected slots when date changes
             setAvailableSlots([]);
         }
     };
 
-    const toggleSlotSelection = (slot) => {
+    const toggleSlotSelection = async (slot) => {
         const slotKey = `${slot.hora_inicio}-${slot.hora_fin}`;
-        setSelectedSlots(prev => {
-            const isSelected = prev.some(s => `${s.hora_inicio}-${s.hora_fin}` === slotKey);
-            if (isSelected) {
-                return prev.filter(s => `${s.hora_inicio}-${s.hora_fin}` !== slotKey);
-            } else {
-                return [...prev, slot];
+        const isSelected = selectedSlots.some(s => `${s.hora_inicio}-${s.hora_fin}` === slotKey);
+
+        if (isSelected) {
+            // Deseleccionar
+            setSelectedSlots(prev => prev.filter(s => `${s.hora_inicio}-${s.hora_fin}` !== slotKey));
+        } else {
+            // Validar slot antes de seleccionar
+            if (doctorId) {
+                try {
+                    const validation = await ApiService.validateSlot(doctorId, selectedDate || '', slot.hora_inicio);
+                    if (!validation.available) {
+                        Alert.alert('Slot no disponible', 'Este horario ya ha sido reservado. Por favor selecciona otro.');
+                        // Recargar slots para actualizar disponibilidad
+                        fetchSlots();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('[DateMultiSlotSelectorModal] Error validando slot:', error.message);
+                    Alert.alert('Error', 'No se pudo validar la disponibilidad del horario');
+                    return;
+                }
             }
-        });
+            setSelectedSlots(prev => [...prev, slot]);
+        }
     };
 
     const handleAccept = () => {
@@ -75,11 +98,11 @@ const DateMultiSlotSelectorModal = ({ visible, onClose, onSelectSlots, fetchSlot
         }
 
         const slotsData = selectedSlots.map(slot => ({
-            fecha: selectedDate,
+            fecha: selectedDate || '',
             hora: `${slot.hora_inicio}-${slot.hora_fin}`
         }));
 
-        onSelectSlots(selectedDate, slotsData);
+        onSelectSlots(selectedDate || '', slotsData);
         onClose();
     };
 

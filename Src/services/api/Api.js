@@ -255,6 +255,10 @@ class ApiService {
         return await this.request(`/doctores/${doctorId}/schedules`, { method: 'GET' });
     }
 
+    async getSlotsByDate(doctorId, date) {
+        return await this.request(`/doctores/${doctorId}/slots-by-date?date=${date}`, { method: 'GET' });
+    }
+
 
     // Métodos para doctores
     async getCitasDoctor() {
