@@ -27,6 +27,7 @@ import {fetchDoctoresCounter} from "../../../utils/slices/counters/DoctoresCount
 import {fetchEspecialidadesCounter} from "../../../utils/slices/counters/EspecialidadesCounterSlice";
 import {fetchHorariosCounter} from "../../../utils/slices/counters/HorariosCounterSlice";
 import {fetchPacientesCounter} from "../../../utils/slices/counters/PacientesCounterSlice";
+import {fetchCitas} from "../../../utils/slices/data/CitasSlice";
 
 const Stack = createNativeStackNavigator();
 
@@ -55,6 +56,7 @@ export default function AdminStack() {
         dispatch(fetchEspecialidadesCounter());
         dispatch(fetchHorariosCounter());
         dispatch(fetchPacientesCounter());
+        dispatch(fetchCitas());
     }, []);
 
     return (

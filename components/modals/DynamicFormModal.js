@@ -206,6 +206,7 @@ export default function DynamicFormModal({
                                             return React.createElement(field.component, {
                                                 ...props,
                                                 formData,
+                                                name: field.name,
                                                 onChange: (name, value) => handleChange(name, value, field)
                                             });
                                         })()}

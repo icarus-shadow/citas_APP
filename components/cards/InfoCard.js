@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { colors, darkColors } from "../../utils/desing/Colors";
 import ApiService from "../../Src/services/api/Api";
 import DateSlotSelectorModal from "../modals/DateSlotSelectorModal";
+import DatePickerComponent from "../DatePickerComponent";
 
 const InfoCard = ({
     data,
@@ -61,8 +62,16 @@ const InfoCard = ({
                 options: doctorOptions.map(d => ({ value: d.id, label: `${d.nombres} ${d.apellidos}` }))
             };
         }
+        if (fieldsToShow.includes('genero')) {
+            newFields.genero = {
+                options: [
+                    { value: 'M', label: 'Masculino' },
+                    { value: 'F', label: 'Femenino' }
+                ]
+            };
+        }
         return newFields;
-    }, [selectFields, pacienteOptions, doctorOptions]);
+    }, [selectFields, pacienteOptions, doctorOptions, fieldsToShow]);
 
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? colors : darkColors;
@@ -180,11 +189,16 @@ const InfoCard = ({
                     })
                 });
             }
-            // Close the modal after successful save
-            onClose();
-            // Refresh data if needed
+
+            // Call onSave and wait for result
+            let saveResult = true;
             if (onSave) {
-                onSave({ ...values, horarios_asignados: assignedHorarios });
+                saveResult = await onSave({ ...values, horarios_asignados: assignedHorarios });
+            }
+
+            // Close the modal only if save was successful
+            if (saveResult !== false) {
+                onClose();
             }
         } catch (error) {
             Alert.alert("Error", "Error al guardar los cambios");
@@ -349,6 +363,16 @@ const InfoCard = ({
                                                             {isSelect.options?.find(opt => opt.value != null && opt.value.toString() === (values?.[key] ?? '').toString())?.label || 'No seleccionado'}
                                                         </Text>
                                                     )
+                                                ) : key === 'fecha_nacimiento' && editStates[key] ? (
+                                                    <DatePickerComponent
+                                                        formData={{ fecha_nacimiento: values.fecha_nacimiento }}
+                                                        name='fecha_nacimiento'
+                                                        onChange={(name, value) => handleChange(name, value)}
+                                                    />
+                                                ) : key === 'genero' && !editStates[key] ? (
+                                                    <Text style={styles.textInput(col, editStates[key])}>
+                                                        {values.genero === 'M' ? 'Masculino' : values.genero === 'F' ? 'Femenino' : 'No especificado'}
+                                                    </Text>
                                                 ) : (
                                                     <TextInput
                                                         editable={!!editStates[key]}
@@ -519,7 +543,7 @@ const styles = StyleSheet.create({
         backgroundColor: col.background,
         borderRadius: 20,
         width: "90%",
-        height: "85%",
+        height: "80%",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.3,
@@ -566,6 +590,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     scrollView: {
+        minHeight: 400,
         flex: 1,
     },
     fieldsContainer: {

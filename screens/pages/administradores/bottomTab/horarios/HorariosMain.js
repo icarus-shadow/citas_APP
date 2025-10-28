@@ -3,7 +3,7 @@ import {useSelector, useDispatch} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import Add from "../../../../../components/Buttons/Add";
 import CountCard from "../../../../../components/cards/CountCard";
-import {useEffect, useState, useRef} from "react";
+import {useEffect, useState} from "react";
 import ApiService from "../../../../../Src/services/api/Api";
 import TableHorarios from "./elements/TableHorarios";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
@@ -18,10 +18,7 @@ export default function HorariosMain() {
     isDark ? (col = colors) : (col = darkColors);
     const dispatch = useDispatch();
 
-    const horarios = useSelector((state) => state.horarios.horarios);
     const horariosCount = useSelector((state) => state.horariosCounter.horariosCount);
-
-    const tableRef = useRef();
     const [modalVisible, setModalVisible] = useState(false);
     const formFields = [
         {name: 'nombre', label: 'Nombre del Horario', type: 'text', required: true},
@@ -50,10 +47,6 @@ export default function HorariosMain() {
       dispatch(fetchHorariosCounter());
     }
 
-    useEffect(() => {
-        actualizarInfo();
-    }, []);
-
     const handleNewHorario = () => {
         setModalVisible(true);
     }
@@ -78,7 +71,6 @@ export default function HorariosMain() {
             if (response) {
                 setModalVisible(false);
                 Alert.alert("Éxito", "Plantilla de horario registrada correctamente");
-                tableRef.current.refreshHorarios();
                 actualizarInfo();
             }
         } catch (error) {
@@ -95,7 +87,7 @@ export default function HorariosMain() {
                     <Add onPressed={handleNewHorario}/>
                     <CountCard title="Horarios" number={horariosCount} />
                 </View>
-                <TableHorarios ref={tableRef} horarios={horarios} refreshHorarios={actualizarInfo()} />
+                <TableHorarios />
                 <DynamicFormModal
                     visible={modalVisible}
                     onCloses={handleCancel}

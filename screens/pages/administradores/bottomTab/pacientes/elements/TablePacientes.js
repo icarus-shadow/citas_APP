@@ -52,39 +52,75 @@ export default function TablePacientes() {
         deletePaciente();
     };
 
-    const handleSave = (item) => {
-        const updatePaciente = async () => {
-            try {
-                let body = {
-                    "nombres": item.nombres,
-                    "apellidos": item.apellidos,
-                    "documento": item.documento,
-                    "rh": item.rh,
-                    "fecha_nacimiento": item.fecha_nacimiento,
-                    "genero": item.genero,
-                    "edad": item.edad,
-                    "telefono": item.telefono,
-                    "alergias": item.alergias,
-                    "comentarios": item.comentarios
-                };
-
-
-                const response = await ApiService.request(`/pacientes/${item.id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(body),
-                });
-
-                if (response) {
-                    Alert.alert("Éxito", "Paciente actualizado correctamente");
-                    updateData();
-                }
-            } catch (error) {
-                Alert.alert("Error", error.message || "Error al actualizar paciente");
-            }finally {
-                setVisible(false);
-            }
+    const validatePaciente = (item) => {
+        // Validación de nombres
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!item.nombres || !nameRegex.test(item.nombres)) {
+            return { isValid: false, error: "Los nombres deben contener solo letras, espacios y acentos." };
         }
-        updatePaciente();
+
+        // Validación de apellidos
+        if (!item.apellidos || !nameRegex.test(item.apellidos)) {
+            return { isValid: false, error: "Los apellidos deben contener solo letras, espacios y acentos." };
+        }
+
+        // Validación de documento
+        const docRegex = /^\d+$/;
+        if (!item.documento || !docRegex.test(item.documento)) {
+            return { isValid: false, error: "El documento debe ser un número válido." };
+        }
+
+        // Validación de RH
+        const rhRegex = /^(a|b|ab|o)(\+|\-)$/i;
+        if (!item.rh || !rhRegex.test(item.rh)) {
+            return { isValid: false, error: "El RH debe ser uno de los siguientes: a+, a-, b+, b-, ab+, ab-, o+, o-." };
+        }
+
+        // Validación de edad
+        const ageRegex = /^\d+$/;
+        if (!item.edad || !ageRegex.test(item.edad)) {
+            return { isValid: false, error: "La edad debe ser un número válido." };
+        }
+
+        return { isValid: true, error: "" };
+    };
+
+    const handleSave = async (item) => {
+        const validation = validatePaciente(item);
+        if (!validation.isValid) {
+            Alert.alert("Error de validación", validation.error);
+            return false;
+        }
+
+        try {
+            let body = {
+                "nombres": item.nombres,
+                "apellidos": item.apellidos,
+                "documento": item.documento,
+                "rh": item.rh,
+                "fecha_nacimiento": item.fecha_nacimiento,
+                "genero": item.genero,
+                "edad": item.edad,
+                "telefono": item.telefono,
+                "alergias": item.alergias,
+                "comentarios": item.comentarios
+            };
+
+
+            const response = await ApiService.request(`/pacientes/${item.id}`, {
+                method: 'PUT',
+                body: JSON.stringify(body),
+            });
+
+            if (response) {
+                Alert.alert("Éxito", "Paciente actualizado correctamente");
+                updateData();
+                return true;
+            }
+        } catch (error) {
+            Alert.alert("Error", error.message || "Error al actualizar paciente");
+            return false;
+        }
     };
 
     return (

@@ -5,45 +5,29 @@ import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCard from "../../../../../../components/cards/InfoCard";
 import DynamicFormModal from "../../../../../../components/modals/DynamicFormModal";
 import AppointmentSlotSelector from "../../../../../../components/AppointmentSlotSelector";
+import {useDispatch, useSelector} from "react-redux";
 
 export default function TableCitasAdmin() {
+    const dispatch = useDispatch();
+
     const [data, setData] = useState([]);
     const [columns, setColumns] = useState([]);
     const [visible, setVisible] = useState(false);
     const [dataToEdit, setDataToEdit] = useState(null);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [selectedSlots, setSelectedSlots] = useState([]);
-    const [pacientes, setPacientes] = useState({});
-    const [doctores, setDoctores] = useState({});
     const [pacientesOptions, setPacientesOptions] = useState([]);
     const [doctoresOptions, setDoctoresOptions] = useState([]);
 
-    const fetchPacientes = async () => {
-        const response = await ApiService.request('/pacientes');
-        const pacientesMap = {};
-        response.forEach(pac => {
-            pacientesMap[pac.id] = `${pac.nombres} ${pac.apellidos}`;
-        });
-        setPacientes(pacientesMap);
-        setPacientesOptions(response);
-    };
+    const doctores = useSelector((state) => state.doctores.doctores);
+    const pacientes = useSelector((state) => state.pacientes.pacientes);
+    const citas = useSelector((state) => state.citas.citas);
 
-    const fetchDoctores = async () => {
-        const response = await ApiService.request('/doctores');
-        const doctoresMap = {};
-        response.forEach(doc => {
-            doctoresMap[doc.id] = `${doc.nombres} ${doc.apellidos}`;
-        });
-        setDoctores(doctoresMap);
-        setDoctoresOptions(response);
-    };
-
-    const fetchCitas = async () => {
-        const response = await ApiService.request('/admin/citas');
-        const citasConNombres = response.map(cita => ({
+    const completeCitas = async () => {
+        const citasConNombres = citas.map(cita => ({
             ...cita,
-            paciente: pacientes[cita.id_paciente] || cita.id_paciente,
-            doctor: doctores[cita.id_doctor] || cita.id_doctor
+            paciente: pacientes.find(p => p.id === cita.id_paciente)?.nombres || cita.id_paciente,
+            doctor: doctores.find(d => d.id === cita.id_doctor)?.nombres || cita.id_doctor
         }));
         setData(citasConNombres);
         setColumns(["fecha_cita", "hora_cita", "lugar", "paciente", "doctor"]);
@@ -57,16 +41,20 @@ export default function TableCitasAdmin() {
         };
     };
 
+    const actualizarInfo = () => {
+        completeCitas()
+    }
+
     useEffect(() => {
-        fetchPacientes();
-        fetchDoctores();
-    }, []);
+        completeCitas()
+    }, [citas]);
 
     useEffect(() => {
         if (Object.keys(pacientes).length > 0 && Object.keys(doctores).length > 0) {
-            fetchCitas();
+            actualizarInfo();
         }
     }, [pacientes, doctores]);
+
 
     const handleView = (item) => {
         setDataToEdit(item);
@@ -82,7 +70,7 @@ export default function TableCitasAdmin() {
                 });
                 if (response) {
                     Alert.alert("Éxito", "Cita eliminado correctamente");
-                    fetchCitas();
+                    actualizarInfo();
                 }
             } catch (error) {
                 Alert.alert("Error", error.message || "Error al eliminar cita");
@@ -112,7 +100,7 @@ export default function TableCitasAdmin() {
 
                 if (response) {
                     Alert.alert("Éxito", "Cita actualizado correctamente");
-                    fetchCitas();
+                    actualizarInfo();
                 }
             } catch (error) {
                 Alert.alert("Error", error.message || "Error al actualizar cita");

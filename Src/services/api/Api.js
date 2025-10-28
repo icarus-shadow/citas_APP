@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const URL_BASE = "http://10.171.196.227:8000/api";
+const URL_BASE = "http://10.107.22.227:8000/api";
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'user_data';
 

@@ -21,6 +21,7 @@
     "axios": "^1.12.2",
     "expo": "54.0.13",
     "expo-dev-client": "^6.0.15",
+    "expo-device": "~8.0.9",
     "expo-notifications": "~0.32.12",
     "expo-splash-screen": "~31.0.10",
     "expo-status-bar": "~3.0.8",

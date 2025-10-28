@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet, Alert, ScrollView} from 'react-native';
+import {View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity} from 'react-native';
 import {useEffect, useState} from "react";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import ApiService from "../../../../../Src/services/api/Api";
@@ -8,6 +8,7 @@ import Add from "../../../../../components/Buttons/Add";
 import CountCard from "../../../../../components/cards/CountCard";
 import TablePacientes from "./elements/TablePacientes";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
+import DatePickerComponent from "../../../../../components/DatePickerComponent";
 
 // slices
 import {useDispatch, useSelector} from "react-redux";
@@ -23,6 +24,8 @@ export default function PacientesMain() {
     isDark ? (col = colors) : (col = darkColors);
 
     const [modalVisible, setModalVisible] = useState(false);
+    const [formData, setFormData] = useState({});
+
     const formFields = [
         {name: 'email', label: 'Email', type: 'email', required: true},
         {name: 'password', label: 'Contraseña', type: 'text', secure: true, required: true, minLength: 6},
@@ -30,7 +33,13 @@ export default function PacientesMain() {
         {name: 'apellidos', label: 'Apellidos', type: 'text', required: true},
         {name: 'documento', label: 'Documento', type: 'number', required: true},
         {name: 'rh', label: 'RH', type: 'text', required: true},
-        {name: 'fecha_nacimiento', label: 'Fecha de Nacimiento', type: 'date', required: true},
+        {
+            name: 'fecha_nacimiento',
+            label: 'Fecha de Nacimiento',
+            type: 'custom',
+            required: true,
+            component: DatePickerComponent
+        },
         {
             name: 'genero', label: 'Género', type: 'select', required: true, options: [
                 {label: 'Masculino', value: 'M'},
@@ -54,9 +63,64 @@ export default function PacientesMain() {
 
     const handleCancel = () => {
         setModalVisible(false);
+        setFormData({}); // Reset form data on cancel
+        console.log('Form cancelled and data reset');
     }
 
+
+
+    const validatePaciente = (item) => {
+        // Validación de nombres
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!item.nombres || !nameRegex.test(item.nombres)) {
+            return { isValid: false, error: "Los nombres deben contener solo letras, espacios y acentos." };
+        }
+
+        // Validación de apellidos
+        if (!item.apellidos || !nameRegex.test(item.apellidos)) {
+            return { isValid: false, error: "Los apellidos deben contener solo letras, espacios y acentos." };
+        }
+
+        // Validación de documento
+        const docRegex = /^\d+$/;
+        if (!item.documento || !docRegex.test(item.documento)) {
+            return { isValid: false, error: "El documento debe ser un número válido." };
+        }
+
+        // Validación de RH
+        const rhRegex = /^(a|b|ab|o)(\+|\-)$/i;
+        if (!item.rh || !rhRegex.test(item.rh)) {
+            return { isValid: false, error: "El RH debe ser uno de los siguientes: a+, a-, b+, b-, ab+, ab-, o+, o-." };
+        }
+
+        // Validación de edad
+        const ageRegex = /^\d+$/;
+        if (!item.edad || !ageRegex.test(item.edad)) {
+            return { isValid: false, error: "La edad debe ser un número válido." };
+        }
+
+        return { isValid: true, error: "" };
+    };
+
     const handleSubmit = async (formData) => {
+        console.log('Submitting form data:', formData);
+
+        // Validar campos con regex
+        const validation = validatePaciente(formData);
+        if (!validation.isValid) {
+            Alert.alert("Error de validación", validation.error);
+            return;
+        }
+
+        // Validate fecha_nacimiento
+        if (!formData.fecha_nacimiento) {
+            Alert.alert("Error", "La fecha de nacimiento es requerida");
+            return;
+        }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(formData.fecha_nacimiento)) {
+            Alert.alert("Error", "La fecha de nacimiento debe estar en formato YYYY-MM-DD");
+            return;
+        }
         try {
             const userData = {
                 email: formData.email,
@@ -72,13 +136,16 @@ export default function PacientesMain() {
                 alergias: formData.alergias,
                 comentarios: formData.comentarios
             };
+            console.log('Sending userData to API:', userData);
             const response = await ApiService.register(userData);
             if (response.paciente) {
                 setModalVisible(false);
+                setFormData({}); // Reset form data on success
                 Alert.alert("Éxito", "Paciente registrado correctamente");
                 actualizarInformacion();
             }
         } catch (error) {
+            console.error('Error registering patient:', error);
             Alert.alert("Error", error.message || "Error al registrar paciente");
         }
     }
@@ -113,4 +180,16 @@ const styles = StyleSheet.create({
         display: "flex",
         flexDirection: "row",
     }),
+    input: (col) => ({
+        borderWidth: 1,
+        borderColor: col.textResalt,
+        borderRadius: 8,
+        padding: 10,
+        fontSize: 14,
+        backgroundColor: col.background,
+        color: col.text,
+    }),
+    selectContainer: {
+        justifyContent: "center",
+    },
 });

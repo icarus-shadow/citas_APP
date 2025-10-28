@@ -1,5 +1,5 @@
 import {View, Text, StyleSheet, Alert, ScrollView} from 'react-native';
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import Add from "../../../../../components/Buttons/Add";
 import CountCard from "../../../../../components/cards/CountCard";
@@ -8,6 +8,8 @@ import ApiService from "../../../../../Src/services/api/Api";
 import TableCitasAdmin from "./elements/TableCitasAdmin";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
 import AppointmentSlotSelector from "../../../../../components/AppointmentSlotSelector";
+import {fetchCitas} from "../../../../../utils/slices/data/CitasSlice";
+import {fetchCitasCounter} from "../../../../../utils/slices/counters/CitasCounterSlice";
 
 let col = colors;
 
@@ -15,35 +17,27 @@ let col = colors;
 export default function CitasMain() {
     const isDark = useSelector((state) => state.darkMode.value);
     isDark ? (col = colors) : (col = darkColors);
+    const dispatch = useDispatch();
 
-    const [citasCount, setCitasCount] = useState(0);
+    const doctors = useSelector((state) => state.doctores.doctores);
+    const patients = useSelector((state) => state.pacientes.pacientes);
+    const citasCount = useSelector((state) => state.citasCounter.citasCount)
+
     const [modalVisible, setModalVisible] = useState(false);
-    const [doctors, setDoctors] = useState([]);
-    const [patients, setPatients] = useState([]);
     const [selectedSlots, setSelectedSlots] = useState([]);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const doctorsResponse = await ApiService.request('/doctores');
-                const patientsResponse = await ApiService.request('/pacientes');
-                setDoctors(doctorsResponse);
-                setPatients(patientsResponse);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
-        fetchData();
-    }, []);
 
     // Opciones de pacientes memoizadas
     const patientOptions = useMemo(() => {
-        console.log('[Admin - CitasMain] Memoizando opciones de pacientes');
         return patients.map(patient => ({
             value: patient.id,
             label: `${patient.nombres} ${patient.apellidos}`
         }));
     }, [patients]);
+
+    const actualizarIfo = () => {
+      dispatch(fetchCitas());
+      dispatch(fetchCitasCounter());
+    }
 
     // Opciones de doctores memoizadas
     const doctorOptions = useMemo(() => {
@@ -80,22 +74,7 @@ export default function CitasMain() {
         {name: 'lugar', label: 'Lugar', type: 'text', required: true, maxLength: 255},
         {name: 'motivo', label: 'Motivo', type: 'text', required: true, maxLength: 255},
     ], [patientOptions, doctorOptions]);
-    const fetchCitasCount = async () => {
-        try {
-            const response = await ApiService.request('/countCitas');
-            if (response.total === undefined) {
-                console.log(`no hay citas`);
-                setCitasCount(0);
-            } else {
-                setCitasCount(response.total);
-            }
-        } catch (error) {
-            console.error('Error fetching citas count:', error);
-        }
-    };
-    useEffect(() => {
-        fetchCitasCount();
-    }, []);
+
 
     const handleNewCita = () => {
         setModalVisible(true);
@@ -147,7 +126,6 @@ export default function CitasMain() {
                 lugar: formData.lugar,
                 motivo: formData.motivo
             };
-            console.log("citaData a enviar:", citaData);
 
             const response = await ApiService.request('/citas', {
                 method: 'POST',
@@ -157,7 +135,7 @@ export default function CitasMain() {
                 setModalVisible(false);
                 setSelectedSlots([]);
                 Alert.alert("Éxito", "Cita registrada correctamente");
-                fetchCitasCount();
+                actualizarIfo();
             }
         } catch (error) {
             Alert.alert("Error", error.message || "Error al registrar cita");

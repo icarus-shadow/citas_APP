@@ -1,24 +1,43 @@
-import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, useState } from 'react';
 import {View, Alert, ScrollView, TouchableOpacity, Text, StyleSheet} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import TableDinamic from "../../../../../../components/TableDinamic";
 import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCard from "../../../../../../components/cards/InfoCard";
 import DynamicFormModal from "../../../../../../components/modals/DynamicFormModal";
+import {fetchHorarios} from "../../../../../../utils/slices/data/HorariosSlice";
+import {fetchDoctores} from "../../../../../../utils/slices/data/DoctoresSlice";
 
-const TableHorarios = forwardRef(function TableHorarios({ horarios }, ref) {
-    useImperativeHandle(ref, () => ({
-        refreshHorarios
-    }));
+export default function TableHorarios() {
     const dispatch = useDispatch();
+    const horarios = useSelector((state) => state.horarios.horarios);
     const [columns, setColumns] = useState(["nombre", "hora_inicio", "hora_fin", "dias"]);
     const [visible, setVisible] = useState(false);
     const [dataToEdit, setDataToEdit] = useState(null);
     const [assignModalVisible, setAssignModalVisible] = useState(false);
     const [selectedHorario, setSelectedHorario] = useState(null);
+    const [data, setData] = useState([]);
 
     const doctors = useSelector((state) => state.doctores.doctores);
 
+    const completeHorarios = () => {
+        const diasMap = {
+            1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue',
+            5: 'Vie', 6: 'Sáb', 7: 'Dom'
+        };
+
+        const horariosCompletos = horarios.map(horario => ({
+            ...horario,
+            dias: Array.isArray(horario.dias)
+                ? horario.dias.map(dia => diasMap[dia]).join(', ')
+                : horario.dias
+        }));
+        setData(horariosCompletos);
+    };
+
+    useEffect(() => {
+        completeHorarios();
+    }, [horarios]);
 
     const handleView = (item) => {
         if (!item || !item.id) {
@@ -48,7 +67,8 @@ const TableHorarios = forwardRef(function TableHorarios({ horarios }, ref) {
             if (response) {
                 setAssignModalVisible(false);
                 Alert.alert("Éxito", "Horario asignado correctamente al doctor");
-                refreshHorarios();
+                dispatch(fetchHorarios());
+                dispatch(fetchDoctores());
             }
         } catch (error) {
             if (error.conflictos && error.conflictos.length > 0) {
@@ -75,13 +95,13 @@ const TableHorarios = forwardRef(function TableHorarios({ horarios }, ref) {
                     Alert.alert("Error", "No se puede eliminar: datos inválidos");
                     return;
                 }
-                
+
                 const response = await ApiService.request(`/horarios/${dataToEdit.id}`, {
                     method: 'DELETE',
                 });
                 if (response) {
                     Alert.alert("Éxito", "Horario eliminado correctamente");
-                    refreshHorarios();
+                    dispatch(fetchHorarios());
                 }
             } catch (error) {
                 Alert.alert("Error", error.message || "Error al eliminar horario");
@@ -127,7 +147,7 @@ const TableHorarios = forwardRef(function TableHorarios({ horarios }, ref) {
 
                 if (response) {
                     Alert.alert("Éxito", "Plantilla de horario actualizada correctamente");
-                    refreshHorarios();
+                    dispatch(fetchHorarios());
                 }
             } catch (error) {
                 Alert.alert("Error", error.message || "Error al actualizar plantilla de horario");
@@ -138,11 +158,26 @@ const TableHorarios = forwardRef(function TableHorarios({ horarios }, ref) {
         updateHorario();
     };
 
+    // Crear opciones para los selects
+    const selectFields = {
+        dias: {
+            options: [
+                { value: 1, label: 'Lunes' },
+                { value: 2, label: 'Martes' },
+                { value: 3, label: 'Miércoles' },
+                { value: 4, label: 'Jueves' },
+                { value: 5, label: 'Viernes' },
+                { value: 6, label: 'Sábado' },
+                { value: 7, label: 'Domingo' }
+            ]
+        }
+    };
+
     return (
         <View style={{ flex: 1, padding: 20 }}>
             <TableDinamic
                 columns={columns}
-                data={horarios}
+                data={data}
                 onView={handleView}
                 onAssign={handleAssign}
             />
@@ -154,6 +189,7 @@ const TableHorarios = forwardRef(function TableHorarios({ horarios }, ref) {
                     fieldsToShow={["nombre", "hora_inicio", "hora_fin", "dias"]}
                     hiddenFields={["id", "updated_at", "created_at", "user_id"]}
                     readOnlyFields={["id", "created_at", "updated_at"]}
+                    selectFields={selectFields}
                     onClose={() => setVisible(false)}
                     onDelete={handleDelete}
                     onSave={handleSave}
@@ -181,6 +217,5 @@ const TableHorarios = forwardRef(function TableHorarios({ horarios }, ref) {
             />
         </View>
     );
-});
+};
 
-export default TableHorarios;
