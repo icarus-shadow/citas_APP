@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {View, Alert, ScrollView} from 'react-native';
+import {View, ScrollView} from 'react-native';
 import TableDinamic from "../../../../../../components/TableDinamic";
 import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCard from "../../../../../../components/cards/InfoCard";
+import CustomAlert from "../../../../../../components/CustomAlert";
 
 import {useDispatch, useSelector} from "react-redux";
 import {fetchPacientes, selectPacientes} from "../../../../../../utils/slices/data/PacientesSlice"
@@ -13,6 +14,11 @@ export default function TablePacientes() {
     const [columns, setColumns] = useState([]);
     const [visible, setVisible] = useState(false);
     const [dataToEdit, setDataToEdit] = useState(null);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
 
     const dispatch = useDispatch();
     const pacientes = useSelector((state) => state.pacientes.pacientes);
@@ -40,11 +46,15 @@ export default function TablePacientes() {
                     method: 'DELETE',
                 });
                 if (response) {
-                    Alert.alert("Éxito", "Paciente eliminado correctamente");
+                    setAlertType('success');
+                    setAlertMessage('Paciente eliminado correctamente');
+                    setAlertVisible(true);
                     updateData();
                 }
             } catch (error) {
-                Alert.alert("Error", error.message || "Error al eliminar paciente");
+                setAlertType('error');
+                setAlertMessage(error.message || 'Error al eliminar paciente');
+                setAlertVisible(true);
             } finally {
                 setVisible(false);
             }
@@ -88,7 +98,9 @@ export default function TablePacientes() {
     const handleSave = async (item) => {
         const validation = validatePaciente(item);
         if (!validation.isValid) {
-            Alert.alert("Error de validación", validation.error);
+            setAlertType('error');
+            setAlertMessage(validation.error);
+            setAlertVisible(true);
             return false;
         }
 
@@ -113,12 +125,16 @@ export default function TablePacientes() {
             });
 
             if (response) {
-                Alert.alert("Éxito", "Paciente actualizado correctamente");
+                setAlertType('success');
+                setAlertMessage('Paciente actualizado correctamente');
+                setAlertVisible(true);
                 updateData();
                 return true;
             }
         } catch (error) {
-            Alert.alert("Error", error.message || "Error al actualizar paciente");
+            setAlertType('error');
+            setAlertMessage(error.message || 'Error al actualizar paciente');
+            setAlertVisible(true);
             return false;
         }
     };
@@ -141,8 +157,15 @@ export default function TablePacientes() {
                         onDelete={handleDelete}
                         onSave={handleSave}
                     />
+)}
 
-            )}
-        </View>
-    );
+{/* Componente de alerta personalizada */}
+<CustomAlert
+    visible={alertVisible}
+    type={alertType}
+    message={alertMessage}
+    onClose={() => setAlertVisible(false)}
+/>
+</View>
+);
 }

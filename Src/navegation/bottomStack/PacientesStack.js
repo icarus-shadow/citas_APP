@@ -3,7 +3,8 @@ import { View } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { colors, darkColors } from "../../../utils/desing/Colors";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import {fetchPerfil} from "../../../utils/slices/data/PerfilSlice";
 
 import CitasMain from "../../../screens/pages/pacientes/bottomTab/citas/CitasMain";
 import DoctoresMain from "../../../screens/pages/pacientes/bottomTab/doctores/DoctoresMain";
@@ -21,6 +22,11 @@ const Stack = createNativeStackNavigator();
 export default function PacientesStack() {
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? colors : darkColors;
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch(fetchPerfil());
+    }, []);
 
     const tabs = [
         { key: "Inicio", icon: "home", label: "Inicio", route: "Inicio" },

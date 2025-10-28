@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, TextInput } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { useSelector } from 'react-redux';
 import { colors, darkColors } from '../../../../../../utils/desing/Colors';
 import ApiService from '../../../../../../Src/services/api/Api';
 import AppointmentSlotSelector from '../../../../../../components/AppointmentSlotSelector';
+import CustomAlert from '../../../../../../components/CustomAlert';
 
 export default function AppointmentSlotModal({
     visible,
@@ -20,6 +21,11 @@ export default function AppointmentSlotModal({
     const [loading, setLoading] = useState(false);
     const [lugar, setLugar] = useState('');
     const [motivo, setMotivo] = useState('');
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
 
     useEffect(() => {
         if (visible && selectedDoctor) {
@@ -49,21 +55,29 @@ export default function AppointmentSlotModal({
 
     const handleSubmit = async () => {
         if (selectedSlots.length === 0) {
-            Alert.alert('Selección requerida', 'Por favor, selecciona al menos un horario antes de confirmar.');
+            setAlertType('error');
+            setAlertMessage('Por favor, selecciona al menos un horario antes de confirmar.');
+            setAlertVisible(true);
             return;
         }
         if (!lugar.trim()) {
-            Alert.alert('Error', 'Por favor ingresa el lugar de la cita.');
+            setAlertType('error');
+            setAlertMessage('Por favor ingresa el lugar de la cita.');
+            setAlertVisible(true);
             return;
         }
         if (!motivo.trim()) {
-            Alert.alert('Error', 'Por favor ingresa el motivo de la cita.');
+            setAlertType('error');
+            setAlertMessage('Por favor ingresa el motivo de la cita.');
+            setAlertVisible(true);
             return;
         }
 
         try {
             if (!user || !user.id) {
-                Alert.alert("Error", "Usuario no autenticado");
+                setAlertType('error');
+                setAlertMessage('Usuario no autenticado');
+                setAlertVisible(true);
                 return;
             }
 
@@ -83,12 +97,16 @@ export default function AppointmentSlotModal({
             const response = await ApiService.createCita(citaData);
 
             if (response) {
-                Alert.alert("¡Éxito!", "Su cita ha sido agendada correctamente");
+                setAlertType('success');
+                setAlertMessage('Su cita ha sido agendada correctamente');
+                setAlertVisible(true);
                 handleClose();
             }
         } catch (error) {
             console.error('[AppointmentSlotModal] Error agendando cita:', error);
-            Alert.alert("Error", error.message || "Error al agendar la cita");
+            setAlertType('error');
+            setAlertMessage(error.message || 'Error al agendar la cita');
+            setAlertVisible(true);
         }
     };
 
@@ -159,6 +177,14 @@ export default function AppointmentSlotModal({
                             </Text>
                         </TouchableOpacity>
                     </View>
+
+                    {/* Componente de alerta personalizada */}
+                    <CustomAlert
+                        visible={alertVisible}
+                        type={alertType}
+                        message={alertMessage}
+                        onClose={() => setAlertVisible(false)}
+                    />
                 </View>
             </View>
         </Modal>

@@ -10,14 +10,20 @@ import PerfilMain from "../../../screens/pages/commonPages/topTab/perfil/PerfilM
 import SlidingTopScreen from "../../../components/SlidingTopScreen";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { colors, darkColors } from "../../../utils/desing/Colors";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import ScreenWithTab from "../ScreenWithTab";
+import {fetchPerfil} from "../../../utils/slices/data/PerfilSlice";
 
 const Stack = createNativeStackNavigator();
 
 export default function DoctoresStack() {
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? colors : darkColors;
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch(fetchPerfil());
+    }, []);
 
     const tabs = [
         { key: "Inicio", icon: "home", label: "Inicio", route: "Inicio" },

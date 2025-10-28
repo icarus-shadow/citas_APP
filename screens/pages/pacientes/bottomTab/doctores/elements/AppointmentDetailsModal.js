@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView } from 'react-native';
 import { useSelector } from 'react-redux';
 import { colors, darkColors } from '../../../../../../utils/desing/Colors';
 import ApiService from '../../../../../../Src/services/api/Api';
+import CustomAlert from '../../../../../../components/CustomAlert';
 
 export default function AppointmentDetailsModal({
     visible,
@@ -19,6 +20,11 @@ export default function AppointmentDetailsModal({
     const [motivo, setMotivo] = useState('');
     const [doctorName, setDoctorName] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('error');
+    const [alertMessage, setAlertMessage] = useState('');
 
     useEffect(() => {
         if (visible && selectedDoctor) {
@@ -48,11 +54,15 @@ export default function AppointmentDetailsModal({
 
     const handleSubmit = () => {
         if (!lugar.trim()) {
-            Alert.alert('Error', 'Por favor ingresa el lugar de la cita.');
+            setAlertType('error');
+            setAlertMessage('Por favor ingresa el lugar de la cita.');
+            setAlertVisible(true);
             return;
         }
         if (!motivo.trim()) {
-            Alert.alert('Error', 'Por favor ingresa el motivo de la cita.');
+            setAlertType('error');
+            setAlertMessage('Por favor ingresa el motivo de la cita.');
+            setAlertVisible(true);
             return;
         }
         onSubmit({ lugar: lugar.trim(), motivo: motivo.trim() });
@@ -147,6 +157,14 @@ export default function AppointmentDetailsModal({
                         </TouchableOpacity>
                     </View>
                 </View>
+
+                {/* Componente de alerta personalizada */}
+                <CustomAlert
+                    visible={alertVisible}
+                    type={alertType}
+                    message={alertMessage}
+                    onClose={() => setAlertVisible(false)}
+                />
             </View>
         </Modal>
     );

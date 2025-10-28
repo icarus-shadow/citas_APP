@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet, Alert, ScrollView} from 'react-native';
+import {View, Text, StyleSheet, ScrollView} from 'react-native';
 import {useDispatch, useSelector} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import Add from "../../../../../components/Buttons/Add";
@@ -10,6 +10,7 @@ import DynamicFormModal from "../../../../../components/modals/DynamicFormModal"
 import AppointmentSlotSelector from "../../../../../components/AppointmentSlotSelector";
 import {fetchCitas} from "../../../../../utils/slices/data/CitasSlice";
 import {fetchCitasCounter} from "../../../../../utils/slices/counters/CitasCounterSlice";
+import CustomAlert from "../../../../../components/CustomAlert";
 
 let col = colors;
 
@@ -25,6 +26,11 @@ export default function CitasMain() {
 
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedSlots, setSelectedSlots] = useState([]);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
 
     // Opciones de pacientes memoizadas
     const patientOptions = useMemo(() => {
@@ -93,25 +99,35 @@ export default function CitasMain() {
             console.log("selectedSlots:", selectedSlots);
             // Validaciones
             if (selectedSlots.length === 0) {
-                Alert.alert("Error", "Debe seleccionar al menos un slot de horario");
+                setAlertType('error');
+                setAlertMessage('Debe seleccionar al menos un slot de horario');
+                setAlertVisible(true);
                 return;
             }
 
             // Validar campos requeridos
             if (!formData.id_paciente || formData.id_paciente === "") {
-                Alert.alert("Error", "Debe seleccionar un paciente");
+                setAlertType('error');
+                setAlertMessage('Debe seleccionar un paciente');
+                setAlertVisible(true);
                 return;
             }
             if (!formData.id_doctor || formData.id_doctor === "") {
-                Alert.alert("Error", "Debe seleccionar un doctor");
+                setAlertType('error');
+                setAlertMessage('Debe seleccionar un doctor');
+                setAlertVisible(true);
                 return;
             }
             if (!formData.lugar || formData.lugar.trim() === "") {
-                Alert.alert("Error", "El campo lugar es requerido");
+                setAlertType('error');
+                setAlertMessage('El campo lugar es requerido');
+                setAlertVisible(true);
                 return;
             }
             if (!formData.motivo || formData.motivo.trim() === "") {
-                Alert.alert("Error", "El campo motivo es requerido");
+                setAlertType('error');
+                setAlertMessage('El campo motivo es requerido');
+                setAlertVisible(true);
                 return;
             }
 
@@ -135,11 +151,15 @@ export default function CitasMain() {
             if (response) {
                 setModalVisible(false);
                 setSelectedSlots([]);
-                Alert.alert("Éxito", "Cita registrada correctamente");
+                setAlertType('success');
+                setAlertMessage('Cita registrada correctamente');
+                setAlertVisible(true);
                 actualizarIfo();
             }
         } catch (error) {
-            Alert.alert("Error", error.message || "Error al registrar cita");
+            setAlertType('error');
+            setAlertMessage(error.message || 'Error al registrar cita');
+            setAlertVisible(true);
         }
     }
 
@@ -159,6 +179,14 @@ export default function CitasMain() {
                     onSubmit={handleSubmit}
                     fields={formFields}
                     title="Nuevo Cita"
+                />
+
+                {/* Componente de alerta personalizada */}
+                <CustomAlert
+                    visible={alertVisible}
+                    type={alertType}
+                    message={alertMessage}
+                    onClose={() => setAlertVisible(false)}
                 />
             </View>
         </ScrollView>

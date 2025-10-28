@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import {View, Alert, ScrollView, TouchableOpacity, Text, StyleSheet} from 'react-native';
+import {View, ScrollView, TouchableOpacity, Text, StyleSheet} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import TableDinamic from "../../../../../../components/TableDinamic";
 import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCard from "../../../../../../components/cards/InfoCard";
 import DynamicFormModal from "../../../../../../components/modals/DynamicFormModal";
+import CustomAlert from "../../../../../../components/CustomAlert";
 import {fetchHorarios} from "../../../../../../utils/slices/data/HorariosSlice";
 import {fetchDoctores} from "../../../../../../utils/slices/data/DoctoresSlice";
 
@@ -17,6 +18,11 @@ export default function TableHorarios() {
     const [assignModalVisible, setAssignModalVisible] = useState(false);
     const [selectedHorario, setSelectedHorario] = useState(null);
     const [data, setData] = useState([]);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
 
     const doctors = useSelector((state) => state.doctores.doctores);
 
@@ -41,7 +47,9 @@ export default function TableHorarios() {
 
     const handleView = (item) => {
         if (!item || !item.id) {
-            Alert.alert("Error", "No se puede mostrar: datos inválidos");
+            setAlertType('error');
+            setAlertMessage('No se puede mostrar: datos inválidos');
+            setAlertVisible(true);
             return;
         }
         setDataToEdit(item);
@@ -66,7 +74,9 @@ export default function TableHorarios() {
             });
             if (response) {
                 setAssignModalVisible(false);
-                Alert.alert("Éxito", "Horario asignado correctamente al doctor");
+                setAlertType('success');
+                setAlertMessage('Horario asignado correctamente al doctor');
+                setAlertVisible(true);
                 dispatch(fetchHorarios());
                 dispatch(fetchDoctores());
             }
@@ -78,12 +88,13 @@ export default function TableHorarios() {
                     1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves',
                     5: 'Viernes', 6: 'Sábado', 7: 'Domingo'
                 };
-                Alert.alert(
-                    "Conflicto de Horarios",
-                    `No se puede asignar el horario "${selectedHorario.nombre}" porque hay un conflicto el ${diasMap[conflicto.dia]} con el horario "${conflicto.horario_conflictivo.horario_template}" (${conflicto.horario_conflictivo.hora_inicio} - ${conflicto.horario_conflictivo.hora_fin}).`
-                );
+                setAlertType('error');
+                setAlertMessage(`No se puede asignar el horario "${selectedHorario.nombre}" porque hay un conflicto el ${diasMap[conflicto.dia]} con el horario "${conflicto.horario_conflictivo.horario_template}" (${conflicto.horario_conflictivo.hora_inicio} - ${conflicto.horario_conflictivo.hora_fin}).`);
+                setAlertVisible(true);
             } else {
-                Alert.alert("Error", error.message || "Error al asignar horario");
+                setAlertType('error');
+                setAlertMessage(error.message || 'Error al asignar horario');
+                setAlertVisible(true);
             }
         }
     };
@@ -92,7 +103,9 @@ export default function TableHorarios() {
         const deleteHorario = async () => {
             try {
                 if (!dataToEdit || !dataToEdit.id) {
-                    Alert.alert("Error", "No se puede eliminar: datos inválidos");
+                    setAlertType('error');
+                    setAlertMessage('No se puede eliminar: datos inválidos');
+                    setAlertVisible(true);
                     return;
                 }
 
@@ -100,11 +113,15 @@ export default function TableHorarios() {
                     method: 'DELETE',
                 });
                 if (response) {
-                    Alert.alert("Éxito", "Horario eliminado correctamente");
+                    setAlertType('success');
+                    setAlertMessage('Horario eliminado correctamente');
+                    setAlertVisible(true);
                     dispatch(fetchHorarios());
                 }
             } catch (error) {
-                Alert.alert("Error", error.message || "Error al eliminar horario");
+                setAlertType('error');
+                setAlertMessage(error.message || 'Error al eliminar horario');
+                setAlertVisible(true);
             } finally {
                 setVisible(false);
             }
@@ -116,7 +133,9 @@ export default function TableHorarios() {
         const updateHorario = async () => {
             try {
                 if (!item || !item.id) {
-                    Alert.alert("Error", "No se puede actualizar: datos inválidos");
+                    setAlertType('error');
+                    setAlertMessage('No se puede actualizar: datos inválidos');
+                    setAlertVisible(true);
                     return;
                 }
 
@@ -146,11 +165,15 @@ export default function TableHorarios() {
                 });
 
                 if (response) {
-                    Alert.alert("Éxito", "Plantilla de horario actualizada correctamente");
+                    setAlertType('success');
+                    setAlertMessage('Plantilla de horario actualizada correctamente');
+                    setAlertVisible(true);
                     dispatch(fetchHorarios());
                 }
             } catch (error) {
-                Alert.alert("Error", error.message || "Error al actualizar plantilla de horario");
+                setAlertType('error');
+                setAlertMessage(error.message || 'Error al actualizar plantilla de horario');
+                setAlertVisible(true);
             } finally {
                 setVisible(false);
             }
@@ -214,6 +237,14 @@ export default function TableHorarios() {
                     }
                 ]}
                 title="Asignar Horario a Doctor"
+            />
+
+            {/* Componente de alerta personalizada */}
+            <CustomAlert
+                visible={alertVisible}
+                type={alertType}
+                message={alertMessage}
+                onClose={() => setAlertVisible(false)}
             />
         </View>
     );

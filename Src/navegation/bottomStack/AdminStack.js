@@ -21,6 +21,7 @@ import {fetchPacientes} from "../../../utils/slices/data/PacientesSlice";
 import {fetchDoctores} from "../../../utils/slices/data/DoctoresSlice";
 import {fetchEspecialidades} from "../../../utils/slices/data/EspecialidadesSlice";
 import {fetchHorarios} from "../../../utils/slices/data/HorariosSlice";
+import {fetchNotificaciones} from "../../../utils/slices/data/NotificacionesSlice";
 import {fetchAdministradoresCounter} from "../../../utils/slices/counters/AdministradoresCounterSlice";
 import {fetchCitasCounter} from "../../../utils/slices/counters/CitasCounterSlice";
 import {fetchDoctoresCounter} from "../../../utils/slices/counters/DoctoresCounterSlice";
@@ -28,6 +29,7 @@ import {fetchEspecialidadesCounter} from "../../../utils/slices/counters/Especia
 import {fetchHorariosCounter} from "../../../utils/slices/counters/HorariosCounterSlice";
 import {fetchPacientesCounter} from "../../../utils/slices/counters/PacientesCounterSlice";
 import {fetchCitas} from "../../../utils/slices/data/CitasSlice";
+import {fetchPerfil} from "../../../utils/slices/data/PerfilSlice";
 
 const Stack = createNativeStackNavigator();
 
@@ -50,6 +52,7 @@ export default function AdminStack() {
         dispatch(fetchDoctores());
         dispatch(fetchEspecialidades());
         dispatch(fetchHorarios());
+        dispatch(fetchNotificaciones());
         dispatch(fetchAdministradoresCounter());
         dispatch(fetchCitasCounter());
         dispatch(fetchDoctoresCounter());
@@ -57,6 +60,7 @@ export default function AdminStack() {
         dispatch(fetchHorariosCounter());
         dispatch(fetchPacientesCounter());
         dispatch(fetchCitas());
+        dispatch(fetchPerfil());
     }, []);
 
     return (

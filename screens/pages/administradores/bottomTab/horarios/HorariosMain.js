@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet, Alert, ScrollView} from 'react-native';
+import {View, Text, StyleSheet, ScrollView} from 'react-native';
 import {useSelector, useDispatch} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import Add from "../../../../../components/Buttons/Add";
@@ -9,6 +9,7 @@ import TableHorarios from "./elements/TableHorarios";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
 import {fetchHorarios} from "../../../../../utils/slices/data/HorariosSlice";
 import {fetchHorariosCounter} from "../../../../../utils/slices/counters/HorariosCounterSlice";
+import CustomAlert from "../../../../../components/CustomAlert";
 
 let col = colors;
 
@@ -20,6 +21,11 @@ export default function HorariosMain() {
 
     const horariosCount = useSelector((state) => state.horariosCounter.horariosCount);
     const [modalVisible, setModalVisible] = useState(false);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
     const formFields = [
         {name: 'nombre', label: 'Nombre del Horario', type: 'text', required: true},
         {
@@ -70,11 +76,15 @@ export default function HorariosMain() {
             });
             if (response) {
                 setModalVisible(false);
-                Alert.alert("Éxito", "Plantilla de horario registrada correctamente");
+                setAlertType('success');
+                setAlertMessage('Plantilla de horario registrada correctamente');
+                setAlertVisible(true);
                 actualizarInfo();
             }
         } catch (error) {
-            Alert.alert("Error", error.message || "Error al registrar plantilla de horario");
+            setAlertType('error');
+            setAlertMessage(error.message || 'Error al registrar plantilla de horario');
+            setAlertVisible(true);
         }
     }
 
@@ -94,6 +104,14 @@ export default function HorariosMain() {
                     onSubmit={handleSubmit}
                     fields={formFields}
                     title="Nuevo Horario"
+                />
+
+                {/* Componente de alerta personalizada */}
+                <CustomAlert
+                    visible={alertVisible}
+                    type={alertType}
+                    message={alertMessage}
+                    onClose={() => setAlertVisible(false)}
                 />
             </View>
         </ScrollView>

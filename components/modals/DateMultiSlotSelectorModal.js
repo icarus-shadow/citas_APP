@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSelector } from 'react-redux';
 import { colors, darkColors } from '../../utils/desing/Colors';
 import ApiService from '../../Src/services/api/Api';
+import CustomAlert from '../CustomAlert';
 
 const DateMultiSlotSelectorModal = ({ visible, onClose, onSelectSlots, fetchSlots: externalFetchSlots, doctorId }) => {
     const [selectedDate, setSelectedDate] = useState('');
@@ -15,6 +16,11 @@ const DateMultiSlotSelectorModal = ({ visible, onClose, onSelectSlots, fetchSlot
     const [tempDate, setTempDate] = useState(new Date());
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? colors : darkColors;
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('error');
+    const [alertMessage, setAlertMessage] = useState('');
 
     useEffect(() => {
         if (selectedDate) {
@@ -41,7 +47,9 @@ const DateMultiSlotSelectorModal = ({ visible, onClose, onSelectSlots, fetchSlot
             }
             setAvailableSlots(daySlots);
         } catch (error) {
-            Alert.alert('Error', 'No se pudieron cargar los slots disponibles');
+            setAlertType('error');
+            setAlertMessage('No se pudieron cargar los slots disponibles');
+            setAlertVisible(true);
             setAvailableSlots([]);
         } finally {
             setLoading(false);
@@ -76,14 +84,18 @@ const DateMultiSlotSelectorModal = ({ visible, onClose, onSelectSlots, fetchSlot
                 try {
                     const validation = await ApiService.validateSlot(doctorId, selectedDate || '', slot.hora_inicio);
                     if (!validation.available) {
-                        Alert.alert('Slot no disponible', 'Este horario ya ha sido reservado. Por favor selecciona otro.');
+                        setAlertType('error');
+                        setAlertMessage('Este horario ya ha sido reservado. Por favor selecciona otro.');
+                        setAlertVisible(true);
                         // Recargar slots para actualizar disponibilidad
                         fetchSlots();
                         return;
                     }
                 } catch (error) {
                     console.error('[DateMultiSlotSelectorModal] Error validando slot:', error.message);
-                    Alert.alert('Error', 'No se pudo validar la disponibilidad del horario');
+                    setAlertType('error');
+                    setAlertMessage('No se pudo validar la disponibilidad del horario');
+                    setAlertVisible(true);
                     return;
                 }
             }
@@ -93,7 +105,9 @@ const DateMultiSlotSelectorModal = ({ visible, onClose, onSelectSlots, fetchSlot
 
     const handleAccept = () => {
         if (selectedSlots.length === 0) {
-            Alert.alert('Error', 'Debe seleccionar al menos un slot');
+            setAlertType('error');
+            setAlertMessage('Debe seleccionar al menos un slot');
+            setAlertVisible(true);
             return;
         }
 
@@ -196,6 +210,14 @@ const DateMultiSlotSelectorModal = ({ visible, onClose, onSelectSlots, fetchSlot
                         </View>
                     </View>
                 </View>
+
+                {/* Componente de alerta personalizada */}
+                <CustomAlert
+                    visible={alertVisible}
+                    type={alertType}
+                    message={alertMessage}
+                    onClose={() => setAlertVisible(false)}
+                />
             </Modal>
         </View>
     );

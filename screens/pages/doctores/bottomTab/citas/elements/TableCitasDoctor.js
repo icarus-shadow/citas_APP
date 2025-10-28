@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import {View, Alert} from 'react-native';
+import {View} from 'react-native';
 import TableDinamic from "../../../../../../components/TableDinamic";
 import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCardDoctor from "./InfoCardDoctor";
+import CustomAlert from "../../../../../../components/CustomAlert";
 
 export default function TableCitasDoctor({ onView, refreshTrigger, pacienteOptions = [] }) {
     const [data, setData] = useState([]);
     const [columns, setColumns] = useState([]);
     const [visible, setVisible] = useState(false);
     const [dataToEdit, setDataToEdit] = useState(null);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
 
     const fetchCitas = async () => {
         try {
@@ -56,11 +62,15 @@ export default function TableCitasDoctor({ onView, refreshTrigger, pacienteOptio
                     method: 'DELETE',
                 });
                 if (response) {
-                    Alert.alert("Éxito", "Cita eliminada correctamente");
+                    setAlertType('success');
+                    setAlertMessage('Cita eliminada correctamente');
+                    setAlertVisible(true);
                     fetchCitas();
                 }
             } catch (error) {
-                Alert.alert("Error", error.message || "Error al eliminar cita");
+                setAlertType('error');
+                setAlertMessage(error.message || 'Error al eliminar cita');
+                setAlertVisible(true);
             } finally {
                 setVisible(false);
             }
@@ -83,11 +93,15 @@ export default function TableCitasDoctor({ onView, refreshTrigger, pacienteOptio
                 });
 
                 if (response) {
-                    Alert.alert("Éxito", "Cita actualizada correctamente");
+                    setAlertType('success');
+                    setAlertMessage('Cita actualizada correctamente');
+                    setAlertVisible(true);
                     fetchCitas();
                 }
             } catch (error) {
-                Alert.alert("Error", error.message || "Error al actualizar cita");
+                setAlertType('error');
+                setAlertMessage(error.message || 'Error al actualizar cita');
+                setAlertVisible(true);
             } finally {
                 setVisible(false);
             }
@@ -119,6 +133,14 @@ export default function TableCitasDoctor({ onView, refreshTrigger, pacienteOptio
                     title="Detalles de la Cita"
                 />
             )}
+
+            {/* Componente de alerta personalizada */}
+            <CustomAlert
+                visible={alertVisible}
+                type={alertType}
+                message={alertMessage}
+                onClose={() => setAlertVisible(false)}
+            />
         </View>
     );
 }

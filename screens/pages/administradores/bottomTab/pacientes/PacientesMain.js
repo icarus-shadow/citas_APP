@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, ScrollView, TouchableOpacity} from 'react-native';
 import {useEffect, useState} from "react";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import ApiService from "../../../../../Src/services/api/Api";
@@ -9,6 +9,7 @@ import CountCard from "../../../../../components/cards/CountCard";
 import TablePacientes from "./elements/TablePacientes";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
 import DatePickerComponent from "../../../../../components/DatePickerComponent";
+import CustomAlert from "../../../../../components/CustomAlert";
 
 // slices
 import {useDispatch, useSelector} from "react-redux";
@@ -25,6 +26,11 @@ export default function PacientesMain() {
 
     const [modalVisible, setModalVisible] = useState(false);
     const [formData, setFormData] = useState({});
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
 
     const formFields = [
         {name: 'email', label: 'Email', type: 'email', required: true},
@@ -108,17 +114,23 @@ export default function PacientesMain() {
         // Validar campos con regex
         const validation = validatePaciente(formData);
         if (!validation.isValid) {
-            Alert.alert("Error de validación", validation.error);
+            setAlertType('error');
+            setAlertMessage(validation.error);
+            setAlertVisible(true);
             return;
         }
 
         // Validate fecha_nacimiento
         if (!formData.fecha_nacimiento) {
-            Alert.alert("Error", "La fecha de nacimiento es requerida");
+            setAlertType('error');
+            setAlertMessage('La fecha de nacimiento es requerida');
+            setAlertVisible(true);
             return;
         }
         if (!/^\d{4}-\d{2}-\d{2}$/.test(formData.fecha_nacimiento)) {
-            Alert.alert("Error", "La fecha de nacimiento debe estar en formato YYYY-MM-DD");
+            setAlertType('error');
+            setAlertMessage('La fecha de nacimiento debe estar en formato YYYY-MM-DD');
+            setAlertVisible(true);
             return;
         }
         try {
@@ -141,12 +153,16 @@ export default function PacientesMain() {
             if (response.paciente) {
                 setModalVisible(false);
                 setFormData({}); // Reset form data on success
-                Alert.alert("Éxito", "Paciente registrado correctamente");
+                setAlertType('success');
+                setAlertMessage('Paciente registrado correctamente');
+                setAlertVisible(true);
                 actualizarInformacion();
             }
         } catch (error) {
             console.error('Error registering patient:', error);
-            Alert.alert("Error", error.message || "Error al registrar paciente");
+            setAlertType('error');
+            setAlertMessage(error.message || 'Error al registrar paciente');
+            setAlertVisible(true);
         }
     }
 
@@ -168,6 +184,14 @@ export default function PacientesMain() {
                     title="Nuevo Paciente"
                 />
             </View>
+
+            {/* Componente de alerta personalizada */}
+            <CustomAlert
+                visible={alertVisible}
+                type={alertType}
+                message={alertMessage}
+                onClose={() => setAlertVisible(false)}
+            />
         </ScrollView>
     )
 }

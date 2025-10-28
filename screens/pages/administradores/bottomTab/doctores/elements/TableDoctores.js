@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {View, Alert, ScrollView} from 'react-native';
+import {View, ScrollView} from 'react-native';
 import TableDinamic from "../../../../../../components/TableDinamic";
 import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCard from "../../../../../../components/cards/InfoCard";
+import CustomAlert from "../../../../../../components/CustomAlert";
 
 import {useSelector, useDispatch} from "react-redux";
 import {fetchDoctoresCounter} from "../../../../../../utils/slices/counters/DoctoresCounterSlice";
@@ -22,6 +23,11 @@ export default function TableDoctores() {
     const [visible, setVisible] = useState(false);
     const [dataToEdit, setDataToEdit] = useState(null);
     const [data, setData] = useState([]);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
 
     const actualizarInfo = async () => {
         try {
@@ -83,11 +89,15 @@ export default function TableDoctores() {
                     method: 'DELETE',
                 });
                 if (response) {
-                    Alert.alert("Éxito", "Doctor eliminado correctamente");
+                    setAlertType('success');
+                    setAlertMessage('Doctor eliminado correctamente');
+                    setAlertVisible(true);
                     actualizarInfo();
                 }
             } catch (error) {
-                Alert.alert("Error", error.message || "Error al eliminar paciente");
+                setAlertType('error');
+                setAlertMessage(error.message || 'Error al eliminar paciente');
+                setAlertVisible(true);
             } finally {
                 setVisible(false);
             }
@@ -123,7 +133,9 @@ export default function TableDoctores() {
             });
 
             if (response) {
-                Alert.alert("Éxito", "Doctor actualizado correctamente");
+                setAlertType('success');
+                setAlertMessage('Doctor actualizado correctamente');
+                setAlertVisible(true);
                 actualizarInfo();
             }
         } catch (error) {
@@ -134,12 +146,13 @@ export default function TableDoctores() {
                     1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves',
                     5: 'Viernes', 6: 'Sábado', 7: 'Domingo'
                 };
-                Alert.alert(
-                    "Conflicto de Horarios",
-                    `No se puede asignar el horario porque hay un conflicto el ${diasMap[conflicto.dia]}.`
-                );
+                setAlertType('error');
+                setAlertMessage(`No se puede asignar el horario porque hay un conflicto el ${diasMap[conflicto.dia]}.`);
+                setAlertVisible(true);
             } else {
-                Alert.alert("Error", error.message || "Error al actualizar doctor");
+                setAlertType('error');
+                setAlertMessage(error.message || 'Error al actualizar doctor');
+                setAlertVisible(true);
             }
         } finally {
             setVisible(false);
@@ -183,8 +196,15 @@ export default function TableDoctores() {
                     onDelete={handleDelete}
                     onSave={handleSave}
                 />
+)}
 
-            )}
-        </View>
-    );
+{/* Componente de alerta personalizada */}
+<CustomAlert
+    visible={alertVisible}
+    type={alertType}
+    message={alertMessage}
+    onClose={() => setAlertVisible(false)}
+/>
+</View>
+);
 }

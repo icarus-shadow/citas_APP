@@ -5,9 +5,10 @@ import Api from "../../../../../Src/services/api/Api";
 import CustomAlert from "../../../../../components/CustomAlert";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
 import {View, Text, StyleSheet, ScrollView, ActivityIndicator, Modal, TextInput, TouchableOpacity} from "react-native";
-import {useSelector} from "react-redux";
+import {useSelector, useDispatch} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import {goToLogin} from "../../../../../Src/services/navigation/NavigationService";
+import {fetchPerfil, selectPerfilLoading, selectPerfilError} from "../../../../../utils/slices/data/PerfilSlice";
 
 
 
@@ -76,6 +77,10 @@ const getEditableFields = (rol) => {
 export default function PerfilMain({ onScrollStateChange }) {
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? colors : darkColors;
+    const dispatch = useDispatch();
+
+    const {user} = useSelector(state => state.auth);
+    const {usuario, email, especialidades, isLoading, error} = useSelector(state => state.perfil);
 
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertType, setAlertType] = useState("success");
@@ -85,61 +90,15 @@ export default function PerfilMain({ onScrollStateChange }) {
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [formData, setFormData] = useState({});
 
-    const {user} = useSelector(state => state.auth);
-
     const showAlert = (type, message) => {
         setAlertType(type);
         setAlertMessage(message);
         setAlertVisible(true);
     };
 
-    const [usuario, setUsuario] = useState(null);
-    const [email, setEmail] = useState("");
-    const [especialidades, setEspecialidades] = useState([]);
-
     const rol = user.id_rol;
 
-    const cargarPerfil = async () => {
-        try{
-            const token = await Api.getToken();
-            if (!token){
-                showAlert("error", "No hay token de usuario");
-                return;
-            }
-            let response;
-            const userA = await Api.getCurrentUser("/user");
-            setEmail(userA.email);
-
-            console.log(rol);
-            if (rol === 1) {
-                response = await Api.getPaciente("/mi-perfil");
-            } else if (rol === 2) {
-                response = await Api.getDoctor("/mi-perfil-doctor");
-                const espResponse = await Api.getEspecialidades();
-                setEspecialidades(espResponse);
-            } else if (rol === 3) {
-                response = await Api.getAdmin("/mi-perfil-admin");
-            } else {
-                console.error("[perfilMain] Rol no valido");
-                return;
-            }
-
-            setUsuario(response);
-
-        } catch (error) {
-            console.error("[perfilMain] Error al cargar el perfil", error);
-            if (error.isAuthError || error.shouldRedirectToLogin) {
-                console.log("[perfilMain] Error de autenticacion manejado por el interceptor, redirigiendo al login")
-                return;
-            }
-            if (error.response) {
-                showAlert("error", error.response.data.message);
-            }
-        }
-    }
-    useEffect(() => {
-        cargarPerfil();
-    }, [])
+    // La carga de datos del perfil ahora se realiza en los stacks de navegación
 
     return (
         <ScrollView
@@ -159,9 +118,13 @@ export default function PerfilMain({ onScrollStateChange }) {
                 durationInSec={2}
                 onClose={() => setAlertVisible(false)}
             />
-            {!usuario ? (
+            {isLoading ? (
                 <ActivityIndicator size="large" color={col.primary}/>
-            ) : (
+            ) : error ? (
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText(col)}>Error al cargar el perfil: {error}</Text>
+                </View>
+            ) : usuario ? (
                 <View style={styles.profileContainer(col)}>
                     <Text style={styles.title(col)}>Perfil de Usuario</Text>
                     <Text style={styles.label(col)}>Email:</Text>
@@ -173,7 +136,7 @@ export default function PerfilMain({ onScrollStateChange }) {
                         </React.Fragment>
                     ))}
                 </View>
-            )}
+            ) : null}
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={[styles.button(col), styles.buttonHalf]}
                                   onPress={() => setIsEditModalVisible(true)}>
@@ -223,7 +186,7 @@ export default function PerfilMain({ onScrollStateChange }) {
                             body: JSON.stringify(data)
                         });
                         showAlert("success", "Perfil actualizado correctamente");
-                        cargarPerfil();
+                        dispatch(fetchPerfil());
                         setIsEditModalVisible(false);
                     } catch (error) {
                         showAlert("error", error.message);
@@ -318,5 +281,16 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 5,
         width: '40%',
+    }),
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    errorText: (col) => ({
+        color: col.text,
+        fontSize: 16,
+        textAlign: 'center',
     }),
 });

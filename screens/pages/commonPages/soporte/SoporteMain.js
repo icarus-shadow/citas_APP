@@ -15,13 +15,15 @@
 // Importaciones de React y hooks
 import React, { useState, useEffect } from 'react';
 // Importaciones de componentes de React Native para la interfaz de usuario
-import { View, Text, FlatList, TouchableOpacity, Linking, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
 // Hook de Redux para acceder al estado global (modo oscuro)
 import { useSelector } from 'react-redux';
 // Importación de colores para temas claro y oscuro
 import { colors, darkColors } from '../../../../utils/desing/Colors';
 // Servicio de API para realizar llamadas al backend
 import ApiService from '../../../../Src/services/api/Api';
+// Componente de alerta personalizado
+import CustomAlert from '../../../../components/CustomAlert';
 
 // Variable global para almacenar los colores actuales del tema
 // Se actualiza dinámicamente según el estado del modo oscuro
@@ -56,6 +58,11 @@ export default function SoporteMain() {
     // Estado para almacenar mensajes de error en caso de fallos en la API
     // null indica que no hay errores, string contiene el mensaje de error
     const [error, setError] = useState(null);
+
+    // Estado para controlar la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('error');
+    const [alertMessage, setAlertMessage] = useState('');
 
     // Hook useEffect: Se ejecuta una vez al montar el componente
     // Llama a fetchAdmins para obtener la lista inicial de administradores
@@ -120,8 +127,10 @@ export default function SoporteMain() {
         // Intentar abrir la URL: Si hay una aplicación de correo configurada, se abrirá
         // El métdo catch maneja el caso donde no hay aplicación de correo disponible
         Linking.openURL(url).catch(() => {
-            // Mostrar alerta nativa si falla la apertura de la aplicación de correo
-            Alert.alert('Error', 'No se pudo abrir la aplicación de correo');
+            // Mostrar alerta personalizada si falla la apertura de la aplicación de correo
+            setAlertType('error');
+            setAlertMessage('No se pudo abrir la aplicación de correo');
+            setAlertVisible(true);
         });
     };
 
@@ -284,6 +293,13 @@ export default function SoporteMain() {
                         No hay administradores disponibles {/* Mensaje cuando no hay datos */}
                     </Text>
                 }
+            />
+            {/* Componente de alerta personalizada */}
+            <CustomAlert
+                visible={alertVisible}
+                type={alertType}
+                message={alertMessage}
+                onClose={() => setAlertVisible(false)}
             />
         </View>
     );

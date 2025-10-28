@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet, Alert, ScrollView} from 'react-native';
+import {View, Text, StyleSheet, ScrollView} from 'react-native';
 import {useSelector, useDispatch} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import Add from "../../../../../components/Buttons/Add";
@@ -9,6 +9,7 @@ import TableDoctores from "./elements/TableDoctores";
 import DynamicFormModal from "../../../../../components/modals/DynamicFormModal";
 import {fetchDoctores} from "../../../../../utils/slices/data/DoctoresSlice";
 import {fetchDoctoresCounter} from "../../../../../utils/slices/counters/DoctoresCounterSlice";
+import CustomAlert from "../../../../../components/CustomAlert";
 
 let col = colors;
 
@@ -23,6 +24,11 @@ export default function DoctoresMain() {
 
     const [modalVisible, setModalVisible] = useState(false);
     const [formFields, setFormFields] = useState([]);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
 
     const actualizarInfo = () => {
       dispatch(fetchDoctores());
@@ -86,7 +92,9 @@ export default function DoctoresMain() {
             });
             if (response.doctor) {
                 setModalVisible(false);
-                Alert.alert("Éxito", "Doctor registrado correctamente");
+                setAlertType('success');
+                setAlertMessage('Doctor registrado correctamente');
+                setAlertVisible(true);
                 actualizarInfo();
             }
         } catch (error) {
@@ -97,12 +105,13 @@ export default function DoctoresMain() {
                     1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves',
                     5: 'Viernes', 6: 'Sábado', 7: 'Domingo'
                 };
-                Alert.alert(
-                    "Conflicto de Horarios",
-                    `No se puede asignar el horario porque hay un conflicto el ${diasMap[conflicto.dia]}.`
-                );
+                setAlertType('error');
+                setAlertMessage(`No se puede asignar el horario porque hay un conflicto el ${diasMap[conflicto.dia]}.`);
+                setAlertVisible(true);
             } else {
-                Alert.alert("Error", error.message || "Error al registrar doctor");
+                setAlertType('error');
+                setAlertMessage(error.message || 'Error al registrar doctor');
+                setAlertVisible(true);
             }
         }
     }
@@ -123,6 +132,14 @@ export default function DoctoresMain() {
                     onSubmit={handleSubmit}
                     fields={formFields}
                     title="Nuevo Doctor"
+                />
+
+                {/* Componente de alerta personalizada */}
+                <CustomAlert
+                    visible={alertVisible}
+                    type={alertType}
+                    message={alertMessage}
+                    onClose={() => setAlertVisible(false)}
                 />
             </View>
         </ScrollView>

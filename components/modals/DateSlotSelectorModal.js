@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSelector } from 'react-redux';
 import { colors, darkColors } from '../../utils/desing/Colors';
 import ApiService from '../../Src/services/api/Api';
+import CustomAlert from '../CustomAlert';
 
 const DateSlotSelectorModal = ({ visible, onClose, doctorId, onSelectSlot }) => {
     const [selectedDate, setSelectedDate] = useState('');
@@ -14,6 +15,11 @@ const DateSlotSelectorModal = ({ visible, onClose, doctorId, onSelectSlot }) => 
     const [tempDate, setTempDate] = useState(new Date());
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? colors : darkColors;
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('error');
+    const [alertMessage, setAlertMessage] = useState('');
 
     useEffect(() => {
         if (selectedDate && doctorId) {
@@ -27,7 +33,9 @@ const DateSlotSelectorModal = ({ visible, onClose, doctorId, onSelectSlot }) => 
             const slots = await ApiService.getSlotsByDate(doctorId, selectedDate);
             setAvailableSlots(slots);
         } catch (error) {
-            Alert.alert('Error', 'No se pudieron cargar los slots disponibles');
+            setAlertType('error');
+            setAlertMessage('No se pudieron cargar los slots disponibles');
+            setAlertVisible(true);
             setAvailableSlots([]);
         } finally {
             setLoading(false);
@@ -53,7 +61,9 @@ const DateSlotSelectorModal = ({ visible, onClose, doctorId, onSelectSlot }) => 
             // Validar slot en tiempo real antes de seleccionar
             const validation = await ApiService.validateSlot(doctorId, selectedDate || '', slot.hora_inicio);
             if (!validation.available) {
-                Alert.alert('Slot no disponible', 'Este horario ya ha sido reservado. Por favor selecciona otro.');
+                setAlertType('error');
+                setAlertMessage('Este horario ya ha sido reservado. Por favor selecciona otro.');
+                setAlertVisible(true);
                 // Recargar slots para actualizar disponibilidad
                 fetchSlots();
                 return;
@@ -62,7 +72,9 @@ const DateSlotSelectorModal = ({ visible, onClose, doctorId, onSelectSlot }) => 
             onClose();
         } catch (error) {
             console.error('[DateSlotSelectorModal] Error validando slot:', error.message);
-            Alert.alert('Error', 'No se pudo validar la disponibilidad del horario');
+            setAlertType('error');
+            setAlertMessage('No se pudo validar la disponibilidad del horario');
+            setAlertVisible(true);
         }
     };
 
@@ -124,6 +136,14 @@ const DateSlotSelectorModal = ({ visible, onClose, doctorId, onSelectSlot }) => 
                             </View>
                         )}
                     </View>
+
+                    {/* Componente de alerta personalizada */}
+                    <CustomAlert
+                        visible={alertVisible}
+                        type={alertType}
+                        message={alertMessage}
+                        onClose={() => setAlertVisible(false)}
+                    />
                 </View>
             </Modal>
         </View>

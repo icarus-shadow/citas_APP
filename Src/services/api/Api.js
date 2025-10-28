@@ -113,6 +113,23 @@ class ApiService {
         });
         return response;
     }
+
+    // Email verification methods
+    async sendVerificationCode(email) {
+        const response = await this.request('/send-verification-code', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        });
+        return response;
+    }
+
+    async verifyCode(email, code) {
+        const response = await this.request('/verify-code', {
+            method: 'POST',
+            body: JSON.stringify({ email, code }),
+        });
+        return response;
+    }
     async getCurrentUser() {
         return await this.request('/user', { method: 'GET' });
     }

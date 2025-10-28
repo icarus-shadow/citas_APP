@@ -1,8 +1,9 @@
 import React, { useState, useEffect, memo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, Platform, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Platform, Modal } from 'react-native';
 import { useSelector } from 'react-redux';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ApiService from '../Src/services/api/Api';
+import CustomAlert from './CustomAlert';
 
 const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
@@ -17,6 +18,11 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showDatePickerModal, setShowDatePickerModal] = useState(false);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('error');
+    const [alertMessage, setAlertMessage] = useState('');
 
     const fetchSlots = async () => {
         console.log('[AppointmentSlotSelector] fetchSlots called with selectedDoctor:', selectedDoctor, 'selectedDate:', selectedDate);
@@ -68,7 +74,9 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
         } catch (err) {
             console.error('[AppointmentSlotSelector] Error al obtener slots:', err.message);
             setError('Error al cargar los horarios disponibles');
-            Alert.alert('Error', 'No se pudieron cargar los horarios disponibles');
+            setAlertType('error');
+            setAlertMessage('No se pudieron cargar los horarios disponibles');
+            setAlertVisible(true);
         } finally {
             setLoading(false);
         }
@@ -121,14 +129,18 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
             const dateStr = `${year}-${month}-${day}`;
             const validation = await ApiService.validateSlot(selectedDoctor, dateStr, slot.hora_inicio);
             if (!validation.available) {
-                Alert.alert('Slot no disponible', 'Este horario ya ha sido reservado. Por favor selecciona otro.');
+                setAlertType('error');
+                setAlertMessage('Este horario ya ha sido reservado. Por favor selecciona otro.');
+                setAlertVisible(true);
                 // Recargar slots para actualizar disponibilidad
                 fetchSlots();
                 return;
             }
         } catch (err) {
             console.error('[AppointmentSlotSelector] Error validando slot:', err.message);
-            Alert.alert('Error', 'No se pudo validar la disponibilidad del horario');
+            setAlertType('error');
+            setAlertMessage('No se pudo validar la disponibilidad del horario');
+            setAlertVisible(true);
             return;
         }
         if (!slot.disponible) return;
@@ -146,7 +158,9 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
                 const lastSelected = selectedSlots[selectedSlots.length - 1];
                 const isConsecutive = checkConsecutive(slot, lastSelected);
                 if (!isConsecutive) {
-                    Alert.alert('Selección inválida', 'Los slots deben ser consecutivos');
+                    setAlertType('error');
+                    setAlertMessage('Los slots deben ser consecutivos');
+                    setAlertVisible(true);
                     return;
                 }
             }
@@ -332,6 +346,14 @@ function AppointmentSlotSelector({ formData, onSlotsSelected }) {
                     )}
                 </View>
             </ScrollView>
+
+            {/* Componente de alerta personalizada */}
+            <CustomAlert
+                visible={alertVisible}
+                type={alertType}
+                message={alertMessage}
+                onClose={() => setAlertVisible(false)}
+            />
         </View>
     );
 }

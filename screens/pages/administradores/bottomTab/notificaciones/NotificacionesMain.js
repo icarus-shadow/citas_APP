@@ -1,26 +1,35 @@
-import {View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity} from 'react-native';
-import {useSelector} from "react-redux";
+import {View, Text, StyleSheet, ScrollView, TouchableOpacity} from 'react-native';
+import {useSelector, useDispatch} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import CountCard from "../../../../../components/cards/CountCard";
 import {useEffect, useState} from "react";
 import ApiService from "../../../../../Src/services/api/Api";
 import TableDinamic from "../../../../../components/TableDinamic";
+import CustomAlert from "../../../../../components/CustomAlert";
+import {setCounters, setActiveData, setHistoryData} from "../../../../../utils/slices/data/NotificacionesSlice";
 
 let col = colors;
 
 export default function NotificacionesMain() {
+    const dispatch = useDispatch();
     const isDark = useSelector((state) => state.darkMode.value);
     isDark ? (col = colors) : (col = darkColors);
 
+    const counters = useSelector((state) => state.notificaciones.counters);
+    const activeData = useSelector((state) => state.notificaciones.activeData);
+    const historyData = useSelector((state) => state.notificaciones.historyData);
+
     const [activeTab, setActiveTab] = useState('activas');
-    const [counters, setCounters] = useState({pendientes: 0, aprobadas: 0, rechazadas: 0});
-    const [activeData, setActiveData] = useState([]);
-    const [historyData, setHistoryData] = useState([]);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
 
     const fetchCounters = async () => {
         try {
             const response = await ApiService.request('/notificaciones/contadores');
-            setCounters(response);
+            dispatch(setCounters(response));
         } catch (error) {
             console.error('Error fetching counters:', error);
         }
@@ -34,10 +43,10 @@ export default function NotificacionesMain() {
                 doctor_name: item.doctor ? `${item.doctor.nombres} ${item.doctor.apellidos}` : 'Desconocido',
                 slots_compacted: compactSlots(item.slots)
             }));
-            setActiveData(processed);
+            dispatch(setActiveData(processed));
         } catch (error) {
             console.error('Error fetching active notifications:', error);
-            setActiveData([]);
+            dispatch(setActiveData([]));
         }
     };
 
@@ -49,10 +58,10 @@ export default function NotificacionesMain() {
                 doctor_name: item.doctor ? `${item.doctor.nombres} ${item.doctor.apellidos}` : 'Desconocido',
                 slots_compacted: compactSlots(item.slots)
             }));
-            setHistoryData(processed);
+            dispatch(setHistoryData(processed));
         } catch (error) {
             console.error('Error fetching history notifications:', error);
-            setHistoryData([]);
+            dispatch(setHistoryData([]));
         }
     };
 
@@ -80,45 +89,54 @@ export default function NotificacionesMain() {
     const handleApprove = async (item) => {
         try {
             await ApiService.request(`/notificaciones/${item.id}/aprobar`, {method: 'POST'});
-            Alert.alert("Éxito", "Notificación aprobada");
+            setAlertType('success');
+            setAlertMessage('Notificación aprobada');
+            setAlertVisible(true);
             fetchCounters();
             fetchActive();
             fetchHistory();
         } catch (error) {
-            Alert.alert("Error", error.message || "Error al aprobar");
+            setAlertType('error');
+            setAlertMessage(error.message || 'Error al aprobar');
+            setAlertVisible(true);
         }
     };
 
     const handleReject = async (item) => {
         try {
             await ApiService.request(`/notificaciones/${item.id}/rechazar`, {method: 'POST'});
-            Alert.alert("Éxito", "Notificación rechazada");
+            setAlertType('success');
+            setAlertMessage('Notificación rechazada');
+            setAlertVisible(true);
             fetchCounters();
             fetchActive();
             fetchHistory();
         } catch (error) {
-            Alert.alert("Error", error.message || "Error al rechazar");
+            setAlertType('error');
+            setAlertMessage(error.message || 'Error al rechazar');
+            setAlertVisible(true);
         }
     };
 
     const handleDeleteHistory = async () => {
-        Alert.alert(
-            "Confirmar",
-            "¿Está seguro de eliminar todo el historial?",
-            [
-                {text: "Cancelar", style: "cancel"},
-                {text: "Eliminar", onPress: async () => {
-                    try {
-                        await ApiService.request('/notificaciones/historial', {method: 'DELETE'});
-                        Alert.alert("Éxito", "Historial eliminado");
-                        fetchCounters();
-                        fetchHistory();
-                    } catch (error) {
-                        Alert.alert("Error", error.message || "Error al eliminar historial");
-                    }
-                }}
-            ]
-        );
+        setAlertType('confirm');
+        setAlertMessage('¿Está seguro de eliminar todo el historial?');
+        setAlertVisible(true);
+    };
+
+    const confirmDeleteHistory = async () => {
+        try {
+            await ApiService.request('/notificaciones/historial', {method: 'DELETE'});
+            setAlertType('success');
+            setAlertMessage('Historial eliminado');
+            setAlertVisible(true);
+            fetchCounters();
+            fetchHistory();
+        } catch (error) {
+            setAlertType('error');
+            setAlertMessage(error.message || 'Error al eliminar historial');
+            setAlertVisible(true);
+        }
     };
 
     const renderActiveActions = (item) => (
@@ -182,6 +200,15 @@ export default function NotificacionesMain() {
                     </View>
                 )}
             </View>
+
+            {/* Componente de alerta personalizada */}
+            <CustomAlert
+                visible={alertVisible}
+                type={alertType}
+                message={alertMessage}
+                onConfirm={alertType === 'confirm' ? confirmDeleteHistory : undefined}
+                onClose={() => setAlertVisible(false)}
+            />
         </ScrollView>
     );
 }

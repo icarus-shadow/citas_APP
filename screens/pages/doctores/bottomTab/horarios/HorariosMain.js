@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, StyleSheet } from "react-native";
 import { useSelector } from "react-redux";
 import { colors, darkColors } from "../../../../../utils/desing/Colors";
 import ScheduleDisplay from './elements/ScheduleDisplay';
 import NotificationList from './elements/NotificationList';
 import DateMultiSlotSelectorModal from '../../../../../components/modals/DateMultiSlotSelectorModal';
 import ApiService from '../../../../../Src/services/api/Api';
+import CustomAlert from '../../../../../components/CustomAlert';
 
 let col = colors;
 
@@ -16,6 +17,11 @@ export default function HorariosMain() {
     const [modalVisible, setModalVisible] = useState(false);
     const [statusMessage, setStatusMessage] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
 
     const fetchAvailableSlots = async (date) => {
         try {
@@ -51,11 +57,15 @@ export default function HorariosMain() {
 
             await ApiService.createNotificacion(data);
             setStatusMessage('Solicitud enviada exitosamente al administrador');
-            Alert.alert('Éxito', 'La solicitud ha sido enviada al administrador para su aprobación');
+            setAlertType('success');
+            setAlertMessage('La solicitud ha sido enviada al administrador para su aprobación');
+            setAlertVisible(true);
         } catch (error) {
             console.error('Error creating notification:', error);
             setStatusMessage('Error al enviar la solicitud');
-            Alert.alert('Error', 'No se pudo enviar la solicitud. Intente nuevamente.');
+            setAlertType('error');
+            setAlertMessage('No se pudo enviar la solicitud. Intente nuevamente.');
+            setAlertVisible(true);
         } finally {
             setLoading(false);
         }
@@ -94,6 +104,14 @@ export default function HorariosMain() {
                 onClose={() => setModalVisible(false)}
                 onSelectSlots={handleSelectSlots}
                 fetchSlots={fetchAvailableSlots}
+            />
+
+            {/* Componente de alerta personalizada */}
+            <CustomAlert
+                visible={alertVisible}
+                type={alertType}
+                message={alertMessage}
+                onClose={() => setAlertVisible(false)}
             />
         </View>
     );

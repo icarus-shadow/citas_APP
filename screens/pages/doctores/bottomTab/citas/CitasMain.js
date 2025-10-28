@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, ScrollView, TouchableOpacity} from 'react-native';
 import {useSelector} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import CountCard from "../../../../../components/cards/CountCard";
@@ -9,6 +9,7 @@ import InfoCardDoctor from "./elements/InfoCardDoctor";
 import DynamicFormModalDoctor from "./elements/DynamicFormModalDoctor";
 import AppointmentSlotSelectorDoctor from "./elements/AppointmentSlotSelectorDoctor";
 import Api from "../../../../../Src/services/api/Api";
+import CustomAlert from "../../../../../components/CustomAlert";
 
 let col = colors;
 
@@ -26,6 +27,11 @@ export default function CitasMain() {
     const [selectedSlots, setSelectedSlots] = useState([]);
     const [pacientes, setPacientes] = useState([]);
     const [refreshTable, setRefreshTable] = useState(0);
+
+    // Estados para la alerta personalizada
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState('success');
+    const [alertMessage, setAlertMessage] = useState('');
 
     /**
      * Obtiene el conteo de citas del doctor
@@ -132,7 +138,9 @@ export default function CitasMain() {
 
             // Validaciones
             if (selectedSlots.length === 0) {
-                Alert.alert("Error", "Debe seleccionar al menos un slot de horario");
+                setAlertType('error');
+                setAlertMessage('Debe seleccionar al menos un slot de horario');
+                setAlertVisible(true);
                 return;
             }
 
@@ -161,11 +169,15 @@ export default function CitasMain() {
                 setModalVisible(false);
                 setSelectedSlots([]);
                 fetchCitasCount(); // Actualizar conteo
-                Alert.alert("¡Éxito!", "Su cita ha sido agendada correctamente");
+                setAlertType('success');
+                setAlertMessage('Su cita ha sido agendada correctamente');
+                setAlertVisible(true);
             }
         } catch (error) {
             console.error('[Doctor - CitasMain] Error agendando cita:', error);
-            Alert.alert("Error", error.message || "Error al agendar la cita");
+            setAlertType('error');
+            setAlertMessage(error.message || 'Error al agendar la cita');
+            setAlertVisible(true);
         }
     };
 
@@ -212,6 +224,14 @@ export default function CitasMain() {
                     onSubmit={handleSubmit}
                     fields={formFields}
                     title="Agendar Nueva Cita"
+                />
+
+                {/* Componente de alerta personalizada */}
+                <CustomAlert
+                    visible={alertVisible}
+                    type={alertType}
+                    message={alertMessage}
+                    onClose={() => setAlertVisible(false)}
                 />
 
             </View>
