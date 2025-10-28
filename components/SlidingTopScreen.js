@@ -21,6 +21,18 @@ export default function SlidingTopScreen({ screens = [] }) {
     const startY = useRef(0);
     const startLocationY = useRef(0);
 
+    const opacity = translateY.interpolate({
+        inputRange: [hiddenPosition, 0],
+        outputRange: [0, 1],
+        extrapolate: 'clamp'
+    });
+
+    const backgroundColor = translateY.interpolate({
+        inputRange: [hiddenPosition, 0],
+        outputRange: ['#FFFFFF', col.background],
+        extrapolate: 'clamp'
+    });
+
     const [activeKey, setActiveKey] = useState(screens[0]?.key || null);
     const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
 
@@ -93,7 +105,7 @@ export default function SlidingTopScreen({ screens = [] }) {
                 {
                     height: overlayHeight,
                     transform: [{ translateY }],
-                    backgroundColor: col.background,
+                    backgroundColor: backgroundColor,
                     borderBottomLeftRadius: 14,
                     borderBottomRightRadius: 14,
                 },
@@ -101,7 +113,7 @@ export default function SlidingTopScreen({ screens = [] }) {
             pointerEvents="box-none"
             {...panResponder.panHandlers}
         >
-            <View style={{ flexDirection: "row", width, height: overlayHeight - handleHeight }}>
+            <Animated.View style={{ flexDirection: "row", width, height: overlayHeight - handleHeight, opacity }}>
                 <View style={{ flex: 1 }}>
                     {ActiveComponent ? (
                         <ActiveComponent navigation={navigation} closeSliding={close} onScrollStateChange={setIsScrolledToEnd} />
@@ -111,9 +123,9 @@ export default function SlidingTopScreen({ screens = [] }) {
                         </View>
                     )}
                 </View>
-            </View>
+            </Animated.View>
 
-            <View style={[styles.bottomBar, { backgroundColor: col.secondaryResalt }]}>
+            <View style={[styles.bottomBar, { backgroundColor: col.secondaryResalt, borderTopColor: col.secondaryResalt }]}>
                 <TouchableOpacity
                     style={styles.iconLeft}
                     onPress={() => { setActiveKey(screens[0]?.key || null); open(); }}
