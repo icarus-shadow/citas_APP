@@ -12,8 +12,8 @@ export default function SlidingTopScreen({ screens = [] }) {
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? darkColors : colors;
 
-    const overlayHeight = Math.round(height * 0.78);
-    const handleHeight = 68;
+    const overlayHeight = Math.round(height * 0.9);
+    const handleHeight = 75;
     const hiddenPosition = -overlayHeight + handleHeight;
 
     const translateY = useRef(new Animated.Value(hiddenPosition)).current;
@@ -29,7 +29,7 @@ export default function SlidingTopScreen({ screens = [] }) {
 
     const backgroundColor = translateY.interpolate({
         inputRange: [hiddenPosition, 0],
-        outputRange: ['#FFFFFF', col.background],
+        outputRange: ['#FFFFFF', '#FFFFFF'],
         extrapolate: 'clamp'
     });
 
