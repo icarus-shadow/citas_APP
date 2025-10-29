@@ -21,6 +21,9 @@ import horariosReducer from '../slices/data/HorariosSlice'
 import citasReducer from '../slices/data/CitasSlice'
 import notificacionesReducer from '../slices/data/NotificacionesSlice'
 import perfilReducer from '../slices/data/PerfilSlice'
+import citasDoctorReducer from '../slices/data/CitasDoctorSlice'
+import horariosDoctorReducer from '../slices/data/HorariosDoctorSlice'
+import notificacionesDoctorReducer from '../slices/data/NotificacionesDoctorSlice'
 
 export const store = configureStore({
     reducer: {
@@ -45,5 +48,8 @@ export const store = configureStore({
         citas: citasReducer,
         notificaciones: notificacionesReducer,
         perfil: perfilReducer,
+        citasDoctor: citasDoctorReducer,
+        horariosDoctor: horariosDoctorReducer,
+        notificacionesDoctor: notificacionesDoctorReducer,
     },
 });

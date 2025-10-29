@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
 import { colors, darkColors } from '../../../../../../utils/desing/Colors';
-import ApiService from '../../../../../../Src/services/api/Api';
+import { selectNotificacionesDoctorActiveData, selectNotificacionesDoctorHistoryData } from '../../../../../../utils/slices/data/NotificacionesDoctorSlice';
 
 let col = colors;
 
@@ -10,29 +10,12 @@ export default function NotificationList() {
     const isDark = useSelector((state) => state.darkMode.value);
     col = isDark ? colors : darkColors;
 
-    const [notificaciones, setNotificaciones] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const activeData = useSelector(selectNotificacionesDoctorActiveData);
+    const historyData = useSelector(selectNotificacionesDoctorHistoryData);
 
-    useEffect(() => {
-        fetchNotificaciones();
-    }, []);
-
-    const fetchNotificaciones = async () => {
-        try {
-            setLoading(true);
-            const response = await ApiService.getMisNotificaciones();
-            if (Array.isArray(response)) {
-                setNotificaciones(response);
-            } else {
-                setNotificaciones([]);
-            }
-        } catch (error) {
-            console.error('Error fetching notificaciones:', error);
-            setNotificaciones([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Combinar datos activos e históricos para mostrar todas las notificaciones
+    const notificaciones = [...activeData, ...historyData];
+    const loading = useSelector((state) => state.notificacionesDoctor.isLoading);
 
     const formatSlots = (slots) => {
         if (!Array.isArray(slots)) return 'Sin slots';

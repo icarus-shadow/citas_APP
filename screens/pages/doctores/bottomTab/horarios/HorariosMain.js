@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView, Text, View, TouchableOpacity, StyleSheet } from "react-native";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { colors, darkColors } from "../../../../../utils/desing/Colors";
 import ScheduleDisplay from './elements/ScheduleDisplay';
 import NotificationList from './elements/NotificationList';
 import DateMultiSlotSelectorModal from '../../../../../components/modals/DateMultiSlotSelectorModal';
 import ApiService from '../../../../../Src/services/api/Api';
 import CustomAlert from '../../../../../components/CustomAlert';
+import { fetchHorariosDoctor } from '../../../../../utils/slices/data/HorariosDoctorSlice';
+import { fetchNotificacionesDoctor } from '../../../../../utils/slices/data/NotificacionesDoctorSlice';
 
 let col = colors;
 
 export default function HorariosMain() {
     const isDark = useSelector((state) => state.darkMode.value);
     col = isDark ? colors : darkColors;
+    const dispatch = useDispatch();
 
     const [modalVisible, setModalVisible] = useState(false);
     const [statusMessage, setStatusMessage] = useState('');
@@ -23,11 +26,17 @@ export default function HorariosMain() {
     const [alertType, setAlertType] = useState('success');
     const [alertMessage, setAlertMessage] = useState('');
 
+    useEffect(() => {
+        dispatch(fetchHorariosDoctor());
+        dispatch(fetchNotificacionesDoctor());
+    }, [dispatch]);
+
+    const horariosDoctor = useSelector((state) => state.horariosDoctor.horariosDoctor);
+
     const fetchAvailableSlots = async (date) => {
         try {
-            const slots = await ApiService.getMisHorarios();
             const dayOfWeek = new Date(date).getDay(); // 0=Sunday, 1=Monday, etc.
-            const availableSlots = slots.filter(slot => slot.dia === dayOfWeek && slot.disponible);
+            const availableSlots = horariosDoctor.filter(slot => slot.dia === dayOfWeek && slot.disponible);
             return availableSlots;
         } catch (error) {
             console.error('Error fetching available slots:', error);

@@ -74,6 +74,13 @@ const getEditableFields = (rol) => {
     return [];
 };
 
+const getRequiredFields = (rol) => {
+    if (rol === 1) return ['nombres', 'apellidos'];
+    if (rol === 2) return ['nombres', 'apellidos'];
+    if (rol === 3) return ['nombres', 'apellidos', 'cedula', 'telefono'];
+    return [];
+};
+
 export default function PerfilMain({ onScrollStateChange }) {
     const isDark = useSelector((state) => state.darkMode.value);
     const col = isDark ? colors : darkColors;
@@ -181,9 +188,25 @@ export default function PerfilMain({ onScrollStateChange }) {
                         console.log(rol);
                         let endpoint = rol === 1 ? '/mi-perfil' :
                             rol === 2 ? '/mi-perfil-doctor' : '/mi-perfil-admin';
+
+                        // Filtrar campos vacíos y manejar campos requeridos
+                        const requiredFields = getRequiredFields(rol);
+                        const filteredData = {};
+                        const originalData = usuario; // Datos originales del perfil
+
+                        for (const key in data) {
+                            if (data[key] !== '' && data[key] !== null && data[key] !== undefined) {
+                                filteredData[key] = data[key];
+                            } else if (requiredFields.includes(key)) {
+                                // Si es requerido y está vacío, usar el valor anterior
+                                filteredData[key] = originalData[key];
+                            }
+                            // Si no es requerido y está vacío, no incluirlo
+                        }
+
                         await Api.request(endpoint, {
                             method: 'PUT',
-                            body: JSON.stringify(data)
+                            body: JSON.stringify(filteredData)
                         });
                         showAlert("success", "Perfil actualizado correctamente");
                         dispatch(fetchPerfil());

@@ -30,7 +30,6 @@ export default function TablePacientes() {
     }
 
     useEffect(() => {
-        updateData();
         setColumns(["nombres", "apellidos", "documento", "rh", "fecha_nacimiento"]);
     },[])
 

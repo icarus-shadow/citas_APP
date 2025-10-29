@@ -1,5 +1,5 @@
 import {View, Text, StyleSheet, ScrollView, TouchableOpacity} from 'react-native';
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {colors, darkColors} from "../../../../../utils/desing/Colors";
 import CountCard from "../../../../../components/cards/CountCard";
 import {useEffect, useState, useMemo} from "react";
@@ -10,6 +10,8 @@ import DynamicFormModalDoctor from "./elements/DynamicFormModalDoctor";
 import AppointmentSlotSelectorDoctor from "./elements/AppointmentSlotSelectorDoctor";
 import Api from "../../../../../Src/services/api/Api";
 import CustomAlert from "../../../../../components/CustomAlert";
+import {fetchCitasDoctor} from "../../../../../utils/slices/data/CitasDoctorSlice";
+import {fetchEspecialidadesDoctor} from "../../../../../utils/slices/data/EspecialidadesDoctorSlice";
 
 let col = colors;
 
@@ -20,12 +22,14 @@ let col = colors;
 export default function CitasMain() {
     const isDark = useSelector((state) => state.darkMode.value);
     const user = useSelector((state) => state.auth.user);
+    const dispatch = useDispatch();
+    const pacientes = useSelector((state) => state.pacientes.pacientes);
+    const citasDoctor = useSelector((state) => state.citasDoctor.citasDoctor);
     isDark ? (col = colors) : (col = darkColors);
 
     const [citasCount, setCitasCount] = useState(0);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedSlots, setSelectedSlots] = useState([]);
-    const [pacientes, setPacientes] = useState([]);
     const [refreshTable, setRefreshTable] = useState(0);
 
     // Estados para la alerta personalizada
@@ -53,32 +57,11 @@ export default function CitasMain() {
         }
     };
 
-    /**
-     * Obtiene la lista de pacientes disponibles
-     */
-    const fetchPacientes = async () => {
-        try {
-            console.log('[Doctor - CitasMain] Obteniendo lista de pacientes...');
-            const response = await ApiService.request('/doctorPacientes', { method: 'GET' });
-            console.log('[Doctor - CitasMain] Respuesta de pacientes:', response);
-            if (Array.isArray(response)) {
-                setPacientes(response);
-                console.log(`[Doctor - CitasMain] Pacientes cargados: ${response.length}`);
-                response.forEach(p => console.log(`Paciente: ${p.nombres} ${p.apellidos}`));
-            } else {
-                console.log('[Doctor - CitasMain] Respuesta no es un array');
-                setPacientes([]);
-            }
-        } catch (error) {
-            console.error('[Doctor - CitasMain] Error obteniendo pacientes:', error);
-            setPacientes([]);
-        }
-    };
-
     useEffect(() => {
         fetchCitasCount();
-        fetchPacientes();
-    }, []);
+        dispatch(fetchCitasDoctor());
+        dispatch(fetchEspecialidadesDoctor());
+    }, [dispatch]);
 
     // Opciones de pacientes
     const pacienteOptions = pacientes.map(p => ({ label: `${p.nombres} ${p.apellidos}`.trim(), value: p.id }));
@@ -169,6 +152,7 @@ export default function CitasMain() {
                 setModalVisible(false);
                 setSelectedSlots([]);
                 fetchCitasCount(); // Actualizar conteo
+                dispatch(fetchCitasDoctor()); // Actualizar citas del doctor
                 setAlertType('success');
                 setAlertMessage('Su cita ha sido agendada correctamente');
                 setAlertVisible(true);

@@ -1,16 +1,19 @@
 import ApiService from "../api/Api";
 
 class NotificacionesAdmin {
-    async getContadores() {
-        return await ApiService.request('/notificaciones/contadores', { method: 'GET' });
+    async getContadores(doctorId = null) {
+        const url = doctorId ? `/notificaciones/contadores?doctor_id=${doctorId}` : '/notificaciones/contadores';
+        return await ApiService.request(url, { method: 'GET' });
     }
 
-    async getActivas() {
-        return await ApiService.request('/notificaciones/activas', { method: 'GET' });
+    async getActivas(doctorId = null) {
+        const url = doctorId ? `/notificaciones/activas?doctor_id=${doctorId}` : '/notificaciones/activas';
+        return await ApiService.request(url, { method: 'GET' });
     }
 
-    async getHistorial() {
-        return await ApiService.request('/notificaciones/historial', { method: 'GET' });
+    async getHistorial(doctorId = null) {
+        const url = doctorId ? `/notificaciones/historial?doctor_id=${doctorId}` : '/notificaciones/historial';
+        return await ApiService.request(url, { method: 'GET' });
     }
 
     async aprobarNotificacion(id) {
