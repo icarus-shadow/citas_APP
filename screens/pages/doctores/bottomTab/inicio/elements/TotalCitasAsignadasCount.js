@@ -12,10 +12,16 @@ const TotalCitasAsignadasCount = () => {
     const citasAsignadasCount = useSelector((state) => state.citasAsignadasCounter.citasAsignadasCount);
 
     useEffect(() => {
+        console.log('[TotalCitasAsignadasCount] doctorId:', doctorId);
+        console.log('[TotalCitasAsignadasCount] citasAsignadasCount:', citasAsignadasCount);
+        console.log('[TotalCitasAsignadasCount] Estado actual del contador:', citasAsignadasCount);
         if (doctorId) {
+            console.log('[TotalCitasAsignadasCount] Despachando fetchCitasAsignadasCounter con doctorId:', doctorId);
             dispatch(fetchCitasAsignadasCounter(doctorId));
+        } else {
+            console.log('[TotalCitasAsignadasCount] No hay doctorId, no se despacha la acción');
         }
-    }, [doctorId, dispatch]);
+    }, [doctorId, dispatch, citasAsignadasCount]);
 
     return (
         <Card

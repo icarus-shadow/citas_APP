@@ -5,8 +5,13 @@ export const fetchCitasAsignadasCounter = createAsyncThunk(
     'citasAsignadasCounter/fetchCitasAsignadasCounter',
     async (doctorId, {rejectWithValue}) => {
         try {
+            console.log('[fetchCitasAsignadasCounter] Iniciando llamada a API con doctorId:', doctorId);
             const response = await Counters.countCitasAsignadas(doctorId);
+            console.log('[fetchCitasAsignadasCounter] Respuesta de API:', response);
+            console.log('[fetchCitasAsignadasCounter] Respuesta completa:', JSON.stringify(response, null, 2));
             const count = response.count || response.total || 0;
+            console.log('[fetchCitasAsignadasCounter] Count calculado:', count);
+            console.log('[fetchCitasAsignadasCounter] Filtros aplicados en backend: id_doctor=' + doctorId + ', tipo=appointment (sin filtro de estado)');
             return count;
         } catch (error) {
             console.error('[CitasAsignadasCounterSlice] \n (fetchCitasAsignadasCounter)  \n error:', error);

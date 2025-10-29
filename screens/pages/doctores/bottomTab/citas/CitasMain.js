@@ -12,6 +12,8 @@ import Api from "../../../../../Src/services/api/Api";
 import CustomAlert from "../../../../../components/CustomAlert";
 import {fetchCitasDoctor} from "../../../../../utils/slices/data/CitasDoctorSlice";
 import {fetchEspecialidadesDoctor} from "../../../../../utils/slices/data/EspecialidadesDoctorSlice";
+import {fetchCitasAsignadasCounter} from "../../../../../utils/slices/counters/CitasAsignadasCounterSlice";
+import {fetchCitasProximasCounter} from "../../../../../utils/slices/counters/CitasProximasCounterSlice";
 
 let col = colors;
 
@@ -58,10 +60,16 @@ export default function CitasMain() {
     };
 
     useEffect(() => {
+        console.log('[Doctor - CitasMain] useEffect ejecutado - Iniciando carga de datos');
         fetchCitasCount();
+        console.log('[Doctor - CitasMain] Dispatching fetchCitasDoctor');
         dispatch(fetchCitasDoctor());
         dispatch(fetchEspecialidadesDoctor());
-    }, [dispatch]);
+        console.log('[Doctor - CitasMain] Dispatching fetchCitasAsignadasCounter');
+        dispatch(fetchCitasAsignadasCounter(user.id));
+        console.log('[Doctor - CitasMain] Dispatching fetchCitasProximasCounter');
+        dispatch(fetchCitasProximasCounter(user.id));
+    }, [dispatch, user.id]);
 
     // Opciones de pacientes
     const pacienteOptions = pacientes.map(p => ({ label: `${p.nombres} ${p.apellidos}`.trim(), value: p.id }));
@@ -153,6 +161,10 @@ export default function CitasMain() {
                 setSelectedSlots([]);
                 fetchCitasCount(); // Actualizar conteo
                 dispatch(fetchCitasDoctor()); // Actualizar citas del doctor
+                console.log('[Doctor - CitasMain] Despachando fetchCitasAsignadasCounter después de crear cita');
+                dispatch(fetchCitasAsignadasCounter(id_doctor)); // Actualizar contador de citas asignadas
+                console.log('[Doctor - CitasMain] Despachando fetchCitasProximasCounter después de crear cita');
+                dispatch(fetchCitasProximasCounter(id_doctor)); // Actualizar contador de citas próximas
                 setAlertType('success');
                 setAlertMessage('Su cita ha sido agendada correctamente');
                 setAlertVisible(true);

@@ -12,10 +12,16 @@ const CitasProximasCount = () => {
     const citasProximasCount = useSelector((state) => state.citasProximasCounter.citasProximasCount);
 
     useEffect(() => {
+        console.log('[CitasProximasCount] doctorId:', doctorId);
+        console.log('[CitasProximasCount] citasProximasCount:', citasProximasCount);
+        console.log('[CitasProximasCount] Estado actual del contador:', citasProximasCount);
         if (doctorId) {
+            console.log('[CitasProximasCount] Despachando fetchCitasProximasCounter con doctorId:', doctorId);
             dispatch(fetchCitasProximasCounter(doctorId));
+        } else {
+            console.log('[CitasProximasCount] No hay doctorId, no se despacha la acción');
         }
-    }, [doctorId, dispatch]);
+    }, [doctorId, dispatch, citasProximasCount]);
 
     return (
         <Card

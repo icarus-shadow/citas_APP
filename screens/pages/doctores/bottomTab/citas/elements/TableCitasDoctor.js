@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+ import React, { useEffect, useState } from 'react';
 import {useDispatch, useSelector} from "react-redux";
 import {View} from 'react-native';
 import TableDinamic from "../../../../../../components/TableDinamic";
@@ -6,6 +6,7 @@ import ApiService from "../../../../../../Src/services/api/Api";
 import InfoCardDoctor from "./InfoCardDoctor";
 import CustomAlert from "../../../../../../components/CustomAlert";
 import {fetchCitasDoctor} from "../../../../../../utils/slices/data/CitasDoctorSlice";
+import {fetchCitasAsignadasCounter} from "../../../../../../utils/slices/counters/CitasAsignadasCounterSlice";
 
 export default function TableCitasDoctor({ onView, refreshTrigger, pacienteOptions = [] }) {
     const dispatch = useDispatch();
@@ -21,11 +22,21 @@ export default function TableCitasDoctor({ onView, refreshTrigger, pacienteOptio
     const [alertMessage, setAlertMessage] = useState('');
 
     useEffect(() => {
+        console.log('[TableCitasDoctor] useEffect - citasDoctor recibido:', citasDoctor);
+        console.log('[TableCitasDoctor] citasDoctor es array?', Array.isArray(citasDoctor));
         if (citasDoctor) {
-            // Filtrar citas para excluir reservas temporales sin paciente asignado
-            const filteredCitas = citasDoctor.filter(cita => cita.id_paciente !== null && cita.id_paciente !== undefined);
+            console.log('[TableCitasDoctor] Total de citas antes de filtrar:', citasDoctor.length);
+            console.log('[TableCitasDoctor] Citas sin filtrar:', citasDoctor.map(c => ({ id: c.id, tipo: c.tipo, estado: c.estado, fecha: c.fecha_cita, hora: c.hora_cita })));
+            // Filtrar citas para mostrar solo citas de tipo "appointment"
+            const filteredCitas = citasDoctor.filter(cita => cita.tipo === "appointment");
+            console.log('[TableCitasDoctor] Citas después de filtrar (solo tipo appointment):', filteredCitas.length);
+            console.log('[TableCitasDoctor] Citas filtradas:', filteredCitas.map(c => ({ id: c.id, tipo: c.tipo, estado: c.estado, fecha: c.fecha_cita, hora: c.hora_cita })));
+            console.log('[TableCitasDoctor] Filtros aplicados en frontend: tipo === "appointment" (sin filtro por estado)');
             setData(filteredCitas);
             setColumns(["fecha_cita", "hora_cita", "lugar", "paciente"]);
+        } else {
+            console.log('[TableCitasDoctor] citasDoctor es null o undefined');
+            setData([]);
         }
     }, [citasDoctor]);
 
@@ -56,6 +67,11 @@ export default function TableCitasDoctor({ onView, refreshTrigger, pacienteOptio
                     setAlertMessage('Cita eliminada correctamente');
                     setAlertVisible(true);
                     dispatch(fetchCitasDoctor());
+                    console.log('[TableCitasDoctor] Despachando fetchCitasAsignadasCounter después de eliminar cita');
+                    const doctorId = useSelector((state) => state.auth.user?.id);
+                    if (doctorId) {
+                        dispatch(fetchCitasAsignadasCounter(doctorId));
+                    }
                 }
             } catch (error) {
                 setAlertType('error');
@@ -87,6 +103,11 @@ export default function TableCitasDoctor({ onView, refreshTrigger, pacienteOptio
                     setAlertMessage('Cita actualizada correctamente');
                     setAlertVisible(true);
                     dispatch(fetchCitasDoctor());
+                    console.log('[TableCitasDoctor] Despachando fetchCitasAsignadasCounter después de actualizar cita');
+                    const doctorId = useSelector((state) => state.auth.user?.id);
+                    if (doctorId) {
+                        dispatch(fetchCitasAsignadasCounter(doctorId));
+                    }
                 }
             } catch (error) {
                 setAlertType('error');

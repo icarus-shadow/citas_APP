@@ -5,11 +5,17 @@ export const fetchPacientesAtendidosCounter = createAsyncThunk(
     'pacientesAtendidosCounter/fetchPacientesAtendidosCounter',
     async (doctorId, {rejectWithValue}) => {
         try {
+            console.log('[fetchPacientesAtendidosCounter] Iniciando llamada a API con doctorId:', doctorId);
             const response = await Counters.countPacientesAtendidos(doctorId);
+            console.log('[fetchPacientesAtendidosCounter] Respuesta de API:', response);
+            console.log('[fetchPacientesAtendidosCounter] Respuesta completa:', JSON.stringify(response, null, 2));
             const count = response.count || response.total || 0;
+            console.log('[fetchPacientesAtendidosCounter] Count calculado:', count);
+            console.log('[fetchPacientesAtendidosCounter] Verificando si hay citas nuevas sin contar...');
             return count;
         } catch (error) {
             console.error('[PacientesAtendidosCounterSlice] \n (fetchPacientesAtendidosCounter)  \n error:', error);
+            console.error('[PacientesAtendidosCounterSlice] Error detallado:', error?.response?.data);
             return rejectWithValue(error?.response?.data || error.message || 'error al obtener contador de pacientes atendidos');
         }
     }

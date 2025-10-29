@@ -12,8 +12,13 @@ const PacientesAtendidosCount = () => {
     const pacientesAtendidosCount = useSelector((state) => state.pacientesAtendidosCounter.pacientesAtendidosCount);
 
     useEffect(() => {
+        console.log('[PacientesAtendidosCount] doctorId:', doctorId);
+        console.log('[PacientesAtendidosCount] pacientesAtendidosCount:', pacientesAtendidosCount);
         if (doctorId) {
+            console.log('[PacientesAtendidosCount] Despachando fetchPacientesAtendidosCounter con doctorId:', doctorId);
             dispatch(fetchPacientesAtendidosCounter(doctorId));
+        } else {
+            console.log('[PacientesAtendidosCount] No hay doctorId, no se despacha la acción');
         }
     }, [doctorId, dispatch]);
 
