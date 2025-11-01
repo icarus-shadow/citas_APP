@@ -74,18 +74,12 @@ const InfoCardDoctor = ({
     const col = isDark ? colors : darkColors;
 
     useEffect(() => {
-        console.log('[InfoCardDoctor] useEffect - data:', data);
-        console.log('[InfoCardDoctor] useEffect - data keys:', Object.keys(data));
-        console.log('[InfoCardDoctor] useEffect - data.paciente:', data.paciente, 'data.doctor:', data.doctor, 'data.id_doctor:', data.id_doctor, 'data.id_paciente:', data.id_paciente);
-        console.log('[InfoCardDoctor] useEffect - visible:', visible);
         // Initialize values with IDs for select fields
         const initialValues = { ...data };
         initialValues.paciente = data.id_paciente;
         if (data.id_doctor && !data.doctor) initialValues.doctor = data.id_doctor;
-        console.log('[InfoCardDoctor] initialValues before setting doctor:', initialValues);
         // Fix: set doctor to the name for display
         initialValues.doctor = data.doctor;
-        console.log('[InfoCardDoctor] initialValues after setting doctor:', initialValues);
         setValues(initialValues);
         setOriginalValues(initialValues);
         setEditStates({});
@@ -159,11 +153,8 @@ const InfoCardDoctor = ({
         setModified(true);
         validateField(key, value);
         if (key === 'doctor' && value !== originalValues.doctor && fieldsToShow.includes('doctor')) {
-            console.log('[InfoCardDoctor] Doctor cambió, abriendo modal de fecha:', value);
             setSelectedDoctor(value);
             setShowDateSlotModal(true);
-        } else {
-            console.log('[InfoCardDoctor] Cambio en', key, 'pero no se abre modal de fecha. Condiciones:', { keyIsDoctor: key === 'doctor', valueChanged: value !== originalValues.doctor, inFields: fieldsToShow.includes('doctor') });
         }
     };
 
@@ -218,8 +209,6 @@ const InfoCardDoctor = ({
                 setAlertType('confirm');
                 setAlertMessage('Estás cambiando doctor o fecha de la cita. ¿Confirmar?');
                 setAlertVisible(true);
-                // Note: For confirm type, we need to handle onConfirm
-                // This will be handled in the CustomAlert component
             } else {
                 await proceedSave();
             }
@@ -329,12 +318,10 @@ const InfoCardDoctor = ({
                     <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                         <View style={styles.fieldsContainer}>
                             {(() => {
-                                const filteredFields = fieldsToShow.filter((key) => !hiddenFields.includes(key) && data.hasOwnProperty(key));
-                                console.log('[InfoCardDoctor] Rendering fields:', filteredFields, 'data:', data, 'data.hasOwnProperty for each:', fieldsToShow.map(k => ({key: k, has: data.hasOwnProperty(k)})));
+                                const filteredFields = fieldsToShow.filter((key) => !hiddenFields.includes(key) && (data.hasOwnProperty(key) || key === 'motivo'));
                                 return filteredFields;
                             })()
                                 .map((key) => {
-                                    console.log(`[InfoCardDoctor] Mapping field: ${key}, data[${key}]:`, data[key]);
                                     const isSelect = localSelectFields[key];
                                     return (
                                         <View key={key} style={styles.fieldContainer}>
@@ -402,7 +389,6 @@ const InfoCardDoctor = ({
                                                             {(() => {
                                                                 const val = values?.[key] ?? '';
                                                                 const found = isSelect.options?.find(opt => opt.value != null && opt.value.toString() === val.toString());
-                                                                console.log(`[InfoCardDoctor] Mostrando ${key} - values[key]:`, val, 'found:', found, 'options:', isSelect.options);
                                                                 return found?.label || 'No seleccionado';
                                                             })()}
                                                         </Text>
@@ -418,7 +404,6 @@ const InfoCardDoctor = ({
                                                     <Text style={styles.textInput(col, editStates[key])}>
                                                         {(() => {
                                                             const val = values?.[key]?.toString();
-                                                            console.log(`[InfoCardDoctor] key: ${key}, value:`, values?.[key], `type: ${typeof values?.[key]}, toString: ${val}`);
                                                             return val || `Ingrese ${key}`;
                                                         })()}
                                                     </Text>
@@ -427,7 +412,6 @@ const InfoCardDoctor = ({
                                                         editable={true}
                                                         value={(() => {
                                                             const val = values?.[key]?.toString();
-                                                            console.log(`[InfoCardDoctor] key: ${key}, value:`, values?.[key], `type: ${typeof values?.[key]}, toString: ${val}`);
                                                             return val;
                                                         })()}
                                                         onChangeText={(val) => handleChange(key, val)}
@@ -458,53 +442,6 @@ const InfoCardDoctor = ({
                                         </View>
                                     );
                                 })}
-
-                            {/* Horarios Section */}
-                            {showHorarios && (
-                                <View style={styles.horariosSection}>
-                                    <View style={styles.horariosHeader}>
-                                        <Text style={[styles.fieldLabel(col), styles.horariosTitle]}>Horarios</Text>
-                                        <TouchableOpacity
-                                            onPress={() => setShowHorarioModal(true)}
-                                            style={styles.addHorarioButton(col)}
-                                        >
-                                            <Ionicons name="add" size={24} color={col.background} />
-                                        </TouchableOpacity>
-                                    </View>
-
-                                    <View style={styles.assignedHorarios}>
-                                        {assignedHorarios.length === 0 ? (
-                                            <Text style={styles.noHorariosText(col)}>Sin horarios asignados</Text>
-                                        ) : (
-                                            assignedHorarios.map((horario) => (
-                                                <View key={horario.id} style={styles.horarioItem(col)}>
-                                                    <View style={styles.horarioInfo}>
-                                                        <Text style={styles.horarioText(col)}>{horario.nombre}</Text>
-                                                        <Text style={styles.horarioTime(col)}>
-                                                            {horario.hora_inicio} - {horario.hora_fin}
-                                                        </Text>
-                                                        <Text style={styles.horarioDays(col)}>
-                                                            {horario.dias && horario.dias.length > 0
-                                                                ? horario.dias.map(dia => {
-                                                                    const diasMap = {1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 7: 'Dom'};
-                                                                    return diasMap[dia] || dia;
-                                                                }).join(', ')
-                                                                : 'Sin días'
-                                                            }
-                                                        </Text>
-                                                    </View>
-                                                    <TouchableOpacity
-                                                        onPress={() => removeHorario(horario.id)}
-                                                        style={styles.removeHorarioButton(col)}
-                                                    >
-                                                        <Ionicons name="remove" size={20} color={col.error} />
-                                                    </TouchableOpacity>
-                                                </View>
-                                            ))
-                                        )}
-                                    </View>
-                                </View>
-                            )}
                         </View>
                     </ScrollView>
 
@@ -529,54 +466,16 @@ const InfoCardDoctor = ({
                         </TouchableOpacity>
                     </View>
 
-                    {/* Modal para seleccionar horario */}
-                    <Modal visible={showHorarioModal} animationType="fade" transparent>
-                        <View style={styles.modalOverlay}>
-                            <View style={styles.horarioModalContent(col)}>
-                                <Text style={styles.modalTitle(col)}>Seleccionar Horario</Text>
-                                <ScrollView style={styles.horarioList}>
-                                    {availableHorariosFiltered.map((horario) => (
-                                        <TouchableOpacity
-                                            key={horario.id}
-                                            onPress={() => addHorario(horario)}
-                                            style={styles.horarioOption(col)}
-                                        >
-                                            <Text style={styles.horarioOptionText(col)}>{horario.nombre}</Text>
-                                            <Text style={styles.horarioDetails(col)}>
-                                                {horario.hora_inicio} - {horario.hora_fin}
-                                            </Text>
-                                            <Text style={styles.horarioDias(col)}>
-                                                Días: {horario.dias && horario.dias.length > 0
-                                                    ? horario.dias.map(dia => {
-                                                        const diasMap = {1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 7: 'Dom'};
-                                                        return diasMap[dia] || dia;
-                                                    }).join(', ')
-                                                    : 'Sin días'
-                                                }
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-                                <TouchableOpacity
-                                    onPress={() => setShowHorarioModal(false)}
-                                    style={styles.closeModalButton(col)}
-                                >
-                                    <Text style={styles.closeModalText(col)}>Cerrar</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </Modal>
-
                     <DateSlotSelectorModal
                         visible={showDateSlotModal}
                         onClose={() => {
                             setShowDateSlotModal(false);
                             setSelectedDoctor(null);
                         }}
-                        doctorId={selectedDoctor}
+                        doctorId={data.id_doctor}
                         onSelectSlot={(date, time) => {
                             handleChange('fecha_cita', date);
-                            // handleChange('hora_cita', time); // Disabled time selection
+                            handleChange('hora_cita', time);
                             setSelectedDoctor(null);
                         }}
                     />
@@ -615,19 +514,19 @@ const styles = StyleSheet.create({
         backgroundColor: col.background,
         borderRadius: 20,
         width: "90%",
-        maxHeight: "75%",
+        height: "80%",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.3,
         shadowRadius: 20,
         elevation: 10,
-        padding: 15,
+        padding: 20,
     }),
     header: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 15,
+        marginBottom: 20,
     },
     avatarContainer: (col) => ({
         width: 70,

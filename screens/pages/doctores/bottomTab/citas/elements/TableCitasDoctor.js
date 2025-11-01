@@ -135,7 +135,7 @@ export default function TableCitasDoctor({ onView, refreshTrigger, pacienteOptio
                     }}
                     visible={visible}
                     hiddenFields={["id", "updated_at", "created_at", "user_id", "id_doctor"]}
-                    readOnlyFields={["doctor", "paciente", "hora_cita"]}
+                    readOnlyFields={["doctor", "hora_cita"]}
                     showHorarios={true}
                     pacienteOptions={pacienteOptions}
                     onClose={() => setVisible(false)}

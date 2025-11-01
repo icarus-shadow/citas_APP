@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const URL_BASE = "http://10.107.22.227:8000/api";
+const URL_BASE = "https://18a61b7e8b61.ngrok-free.app/api";
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'user_data';
 
@@ -307,6 +307,13 @@ class ApiService {
     }
 
     // Méodo de diagnóstico para verificar autenticación
+    async registerDeviceToken(token, deviceType = 'mobile') {
+        return await this.request('/register-device-token', {
+            method: 'POST',
+            body: JSON.stringify({ token, device_type: deviceType }),
+        });
+    }
+
     async checkAuthStatus() {
         try {
             const token = await this.getToken();

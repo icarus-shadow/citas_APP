@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import ApiService from '../../Src/services/api/Api';
 
 const validateRegistration = (data) => {
@@ -80,6 +81,22 @@ export const login = createAsyncThunk(
 
             await AsyncStorage.setItem('auth_token', token);
             await AsyncStorage.setItem('user_data', JSON.stringify(user));
+
+            // Registrar token de dispositivo para notificaciones push
+            try {
+                const pushToken = await AsyncStorage.getItem('push_token');
+                console.log('[AuthSlice] Push token from storage:', pushToken);
+                if (pushToken) {
+                    console.log('[AuthSlice] Intentando registrar token en backend...');
+                    const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
+                    const response = await ApiService.registerDeviceToken(pushToken, deviceType);
+                    console.log('[AuthSlice] Push token registrado en backend:', response);
+                } else {
+                    console.log('[AuthSlice] No push token found in storage');
+                }
+            } catch (error) {
+                console.error('[AuthSlice] Error registrando push token:', error);
+            }
 
             return { user, token };
         } catch (error) {

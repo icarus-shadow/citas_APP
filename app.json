@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.shadowphantom.AppCitas"
     },
     "android": {
       "useNextNotificationsApi": true,
@@ -26,6 +27,12 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.shadowphantom.AppCitas"
+    },
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#007AFF",
+      "iosDisplayInForeground": true,
+      "androidMode": "default"
     },
     "web": {
       "favicon": "./assets/favicon.png"

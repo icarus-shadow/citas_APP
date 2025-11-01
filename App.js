@@ -6,7 +6,8 @@ import {ActivityIndicator, Text, View} from 'react-native';
 import {checkAuthState} from './utils/slices/AuthSlice';
 import AppNavegacion from './Src/navegation/AppNavegacion';
 import {colors, darkColors} from "./utils/desing/Colors";
-import * as Notifications from 'expo-notifications';
+import { usePushNotifications } from './components/usePushNotifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const Main = () => {
@@ -17,29 +18,18 @@ const Main = () => {
 
     const dispatch = useDispatch();
     const {isLoading} = useSelector((state) => state.auth);
+    const { expoPushToken } = usePushNotifications();
 
     useEffect(() => {
         dispatch(checkAuthState());
     }, [dispatch]);
 
     useEffect(() => {
-        Notifications.setNotificationHandler({
-
-            handleNotification: async () => ({
-                shouldShowAlert: true,
-                shouldShowBanner: true,
-                shouldPlaySound: true,
-                shouldSetBadge: true,
-            })
-        })
-        const getPermisos = async () => {
-            const { status } = await Notifications.requestPermissionsAsync();
-            if (status !== 'granted') {
-                alert('se requieren permisos \n esto para poder enviar notificaciones')
-            }
+        if (expoPushToken) {
+            AsyncStorage.setItem('push_token', expoPushToken);
+            console.log('[App] Push token guardado:', expoPushToken);
         }
-        getPermisos();
-    }, []);
+    }, [expoPushToken]);
 
 
 
@@ -61,6 +51,7 @@ const Main = () => {
 };
 
 export default function App() {
+    usePushNotifications()
     return (
         <Provider store={store}>
             <StatusBar style="auto"/>

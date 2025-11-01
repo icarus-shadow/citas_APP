@@ -347,13 +347,6 @@ export default function ConfiguracionMain() {
                 value = {permisosNotificaciones}
                 onValueChange =  {toggleSwitch}
             />
-            <TouchableOpacity
-                style={[styles.button, {backgroundColor: col.error}]}
-                onPress={programarNotificacion}
-            >
-                <Text style={[styles.buttonText, {color: col.text}]}>programar noti</Text>
-            </TouchableOpacity>
-
         </View>
     )
 }
